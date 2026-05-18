@@ -66,10 +66,10 @@ export default async function DashboardPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Dashboard</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Dashboard</h1>
           <p className="text-slate-500 text-sm mt-0.5">Overview of your club inventory</p>
         </div>
         <div className="flex gap-2">
@@ -98,7 +98,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         {[
           { label: "Total Components", value: components.length, icon: Package2, color: "text-indigo-600 bg-indigo-50" },
           { label: "Total Units", value: totalQty, icon: TrendingUp, color: "text-blue-600 bg-blue-50" },
@@ -165,7 +165,7 @@ export default async function DashboardPage() {
                     <div className="text-xs text-slate-400 font-mono">{c.id}</div>
                   </div>
                   <span className={`text-sm font-bold ${Number(c.quantity) === 0 ? "text-red-600" : "text-amber-600"}`}>
-                    {c.quantity} {Number(c.quantity) === 0 && "⚠"}
+                    {c.quantity}
                   </span>
                 </div>
               ))}

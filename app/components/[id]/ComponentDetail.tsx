@@ -110,7 +110,7 @@ export default function ComponentDetail({
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6">
       <div className="flex items-center gap-3">
         <Link href="/components" className="text-slate-400 hover:text-slate-600 transition-colors">
           <ArrowLeft className="w-5 h-5" />
@@ -171,7 +171,7 @@ export default function ComponentDetail({
       </div>
 
       {/* Actions */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3">
         <button
           onClick={() => { setStockDialog("in"); setStockQty("1"); }}
           className="flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"

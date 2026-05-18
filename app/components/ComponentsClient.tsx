@@ -2,8 +2,9 @@
 import { useState } from "react";
 import { Component, getCategoryLabel, getCategoryColor } from "@/lib/types";
 import Link from "next/link";
-import { Plus, Search, Package2 } from "lucide-react";
+import { Plus, Search, Package2, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 const ALL = "ALL";
 
@@ -11,7 +12,6 @@ export default function ComponentsClient({ initialComponents }: { initialCompone
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState<string>(ALL);
 
-  // Build unique category list from the components themselves
   const categoryMap = new Map<string, { label: string; color: string }>();
   initialComponents.forEach((c) => {
     if (!categoryMap.has(c.category)) {
@@ -32,23 +32,25 @@ export default function ComponentsClient({ initialComponents }: { initialCompone
   });
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Components</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Components</h1>
           <p className="text-slate-500 text-sm mt-0.5">{initialComponents.length} total items</p>
         </div>
         <Link
           href="/components/new"
-          className="flex items-center gap-1.5 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+          className="flex items-center gap-1.5 bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
         >
           <Plus className="w-4 h-4" />
-          Add Component
+          <span className="hidden sm:inline">Add Component</span>
+          <span className="sm:hidden">Add</span>
         </Link>
       </div>
 
-      <div className="flex gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-48">
+      {/* Search + filter */}
+      <div className="space-y-2">
+        <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
             placeholder="Search by name, part number, box..."
@@ -60,7 +62,7 @@ export default function ComponentsClient({ initialComponents }: { initialCompone
         <div className="flex gap-1.5 flex-wrap">
           <button
             onClick={() => setSelectedCat(ALL)}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
               selectedCat === ALL
                 ? "bg-indigo-600 text-white"
                 : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50"
@@ -72,7 +74,7 @@ export default function ComponentsClient({ initialComponents }: { initialCompone
             <button
               key={cat}
               onClick={() => setSelectedCat(cat === selectedCat ? ALL : cat)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors border ${
                 selectedCat === cat ? color : "bg-white border-slate-200 text-slate-600 hover:bg-slate-50"
               }`}
             >
@@ -93,64 +95,104 @@ export default function ComponentsClient({ initialComponents }: { initialCompone
           )}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Part No.</th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Name</th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Category</th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Box</th>
-                <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Qty</th>
-                <th className="px-4 py-3"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {filtered.map((c) => (
-                <tr key={c.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3">
-                    <span className="font-mono text-xs text-slate-500">{c.id}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="font-medium text-slate-800 text-sm">{c.name}</div>
-                    {c.description && (
-                      <div className="text-xs text-slate-400 truncate max-w-[200px]">{c.description}</div>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getCategoryColor(c)}`}>
-                      {getCategoryLabel(c)}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {c.boxName ? (
-                      <div>
-                        <div className="text-sm text-slate-700">{c.boxName}</div>
-                        <div className="text-xs text-slate-400 font-mono">{c.boxId}</div>
-                      </div>
-                    ) : (
-                      <span className="text-slate-300 text-sm">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <span className={`text-sm font-bold ${
-                      Number(c.quantity) === 0 ? "text-red-600"
-                      : Number(c.quantity) <= 2 ? "text-amber-600"
-                      : "text-slate-700"
-                    }`}>
-                      {c.quantity}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link href={`/components/${encodeURIComponent(c.id)}`} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
-                      Manage
-                    </Link>
-                  </td>
+        <>
+          {/* Desktop table */}
+          <div className="hidden sm:block bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/80">
+                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Part No.</th>
+                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Name</th>
+                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Category</th>
+                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Box</th>
+                  <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Qty</th>
+                  <th className="px-4 py-3"></th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filtered.map((c) => (
+                  <tr key={c.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <span className="font-mono text-xs text-slate-500">{c.id}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-slate-800 text-sm">{c.name}</div>
+                      {c.description && (
+                        <div className="text-xs text-slate-400 truncate max-w-[200px]">{c.description}</div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getCategoryColor(c)}`}>
+                        {getCategoryLabel(c)}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      {c.boxName ? (
+                        <div>
+                          <div className="text-sm text-slate-700">{c.boxName}</div>
+                          <div className="text-xs text-slate-400 font-mono">{c.boxId}</div>
+                        </div>
+                      ) : (
+                        <span className="text-slate-300 text-sm">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className={`text-sm font-bold ${
+                        Number(c.quantity) === 0 ? "text-red-600"
+                        : Number(c.quantity) <= 2 ? "text-amber-600"
+                        : "text-slate-700"
+                      }`}>
+                        {c.quantity}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <Link href={`/components/${encodeURIComponent(c.id)}`} className="text-xs text-indigo-600 hover:text-indigo-700 font-medium">
+                        Manage
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile card list */}
+          <div className="sm:hidden space-y-2">
+            {filtered.map((c) => (
+              <Link
+                key={c.id}
+                href={`/components/${encodeURIComponent(c.id)}`}
+                className="block bg-white rounded-xl border border-slate-200 p-4 shadow-sm active:bg-slate-50"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="font-semibold text-slate-800 truncate">{c.name}</div>
+                    <div className="text-xs font-mono text-slate-400 mt-0.5">{c.id}</div>
+                  </div>
+                  <span className={cn(
+                    "text-lg font-bold shrink-0",
+                    Number(c.quantity) === 0 ? "text-red-500"
+                    : Number(c.quantity) <= 2 ? "text-amber-500"
+                    : "text-slate-700"
+                  )}>
+                    {c.quantity}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${getCategoryColor(c)}`}>
+                    {getCategoryLabel(c)}
+                  </span>
+                  {c.boxName && (
+                    <span className="flex items-center gap-1 text-xs text-slate-400">
+                      <MapPin className="w-3 h-3" />
+                      {c.boxName}
+                    </span>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

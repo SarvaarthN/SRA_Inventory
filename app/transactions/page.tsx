@@ -31,9 +31,9 @@ export default async function TransactionsPage() {
   const transactions = await getTransactions();
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">Activity Log</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Activity Log</h1>
         <p className="text-slate-500 text-sm mt-0.5">Full history of all inventory changes</p>
       </div>
 
@@ -43,62 +43,83 @@ export default async function TransactionsPage() {
           <p className="text-sm">No activity yet</p>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-100 bg-slate-50">
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Type</th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Component</th>
-                <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3 hidden sm:table-cell">By</th>
-                <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3 hidden md:table-cell">Change</th>
-                <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3 hidden md:table-cell">After</th>
-                <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Time</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {transactions.map((tx) => (
-                <tr key={tx.id} className="hover:bg-slate-50 transition-colors">
-                  <td className="px-4 py-3">
+        <>
+          {/* Desktop table */}
+          <div className="hidden sm:block bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-slate-100 bg-slate-50/80">
+                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Type</th>
+                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Component</th>
+                  <th className="text-left text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">By</th>
+                  <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Change</th>
+                  <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">After</th>
+                  <th className="text-right text-xs font-semibold text-slate-500 uppercase tracking-wide px-4 py-3">Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {transactions.map((tx) => (
+                  <tr key={tx.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-3">
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${txTypeColor[tx.type]}`}>
+                        {txTypeLabel[tx.type]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Link href={`/components/${encodeURIComponent(tx.componentId)}`} className="text-sm font-medium text-slate-700 hover:text-indigo-600">
+                        {tx.componentName}
+                      </Link>
+                      <div className="text-xs text-slate-400 font-mono">{tx.componentId}</div>
+                      {tx.notes && <div className="text-xs text-slate-400 italic">{tx.notes}</div>}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="text-sm text-slate-600">{tx.performedBy}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {tx.type === "STOCK_IN" && <span className="text-sm font-semibold text-blue-600">+{tx.quantityChange}</span>}
+                      {tx.type === "STOCK_OUT" && <span className="text-sm font-semibold text-amber-600">-{tx.quantityChange}</span>}
+                      {(tx.type === "CREATED" || tx.type === "DELETED") && <span className="text-sm text-slate-400">{tx.quantityChange}</span>}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <span className="text-sm font-medium text-slate-700">{tx.quantityAfter}</span>
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <div className="text-xs text-slate-500">{format(new Date(tx.timestamp), "dd MMM")}</div>
+                      <div className="text-xs text-slate-400">{format(new Date(tx.timestamp), "HH:mm")}</div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile card list */}
+          <div className="sm:hidden space-y-2">
+            {transactions.map((tx) => (
+              <div key={tx.id} className="bg-white rounded-xl border border-slate-200 p-3 shadow-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${txTypeColor[tx.type]}`}>
                       {txTypeLabel[tx.type]}
                     </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Link
-                      href={`/components/${encodeURIComponent(tx.componentId)}`}
-                      className="text-sm font-medium text-slate-700 hover:text-indigo-600"
-                    >
-                      {tx.componentName}
-                    </Link>
-                    <div className="text-xs text-slate-400 font-mono">{tx.componentId}</div>
-                    {tx.notes && <div className="text-xs text-slate-400 italic">{tx.notes}</div>}
-                  </td>
-                  <td className="px-4 py-3 hidden sm:table-cell">
-                    <span className="text-sm text-slate-600">{tx.performedBy}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right hidden md:table-cell">
-                    {tx.type === "STOCK_IN" && (
-                      <span className="text-sm font-semibold text-blue-600">+{tx.quantityChange}</span>
-                    )}
-                    {tx.type === "STOCK_OUT" && (
-                      <span className="text-sm font-semibold text-amber-600">-{tx.quantityChange}</span>
-                    )}
-                    {(tx.type === "CREATED" || tx.type === "DELETED") && (
-                      <span className="text-sm text-slate-400">{tx.quantityChange}</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right hidden md:table-cell">
-                    <span className="text-sm font-medium text-slate-700">{tx.quantityAfter}</span>
-                  </td>
-                  <td className="px-4 py-3 text-right">
+                    {tx.type === "STOCK_IN" && <span className="text-sm font-bold text-blue-600">+{tx.quantityChange}</span>}
+                    {tx.type === "STOCK_OUT" && <span className="text-sm font-bold text-amber-600">-{tx.quantityChange}</span>}
+                  </div>
+                  <div className="text-right shrink-0">
                     <div className="text-xs text-slate-500">{format(new Date(tx.timestamp), "dd MMM")}</div>
                     <div className="text-xs text-slate-400">{format(new Date(tx.timestamp), "HH:mm")}</div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                  </div>
+                </div>
+                <Link href={`/components/${encodeURIComponent(tx.componentId)}`} className="block mt-1.5">
+                  <div className="text-sm font-medium text-slate-700">{tx.componentName}</div>
+                  <div className="text-xs font-mono text-slate-400">{tx.componentId}</div>
+                </Link>
+                <div className="text-xs text-slate-500 mt-1">by {tx.performedBy}</div>
+                {tx.notes && <div className="text-xs text-slate-400 mt-0.5 italic">{tx.notes}</div>}
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

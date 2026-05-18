@@ -261,7 +261,7 @@ export default function StockPage() {
                   action.mode === "in" ? "border-blue-100 bg-blue-50/40" : "border-amber-100 bg-amber-50/40"
                 )}>
                   <p className="text-sm font-medium text-slate-700">
-                    {action.mode === "in" ? "↩ Returning to stock" : "↪ Taking from stock"}
+                    {action.mode === "in" ? "Returning to stock" : "Taking from stock"}
                   </p>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
