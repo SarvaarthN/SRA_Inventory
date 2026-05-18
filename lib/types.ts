@@ -1,0 +1,92 @@
+// Category is now a plain string — codes like "TOOL", "SENS", or any user-defined code
+export type Category = string;
+
+export interface CategoryDef extends Record<string, unknown> {
+  code: string;
+  label: string;
+  color: string;
+  isDefault: string; // stored as "true"/"false" in Redis hash
+  createdAt: string;
+}
+
+export const COLOR_OPTIONS = [
+  { label: "Amber",  value: "bg-amber-100 text-amber-800 border-amber-200",  dot: "bg-amber-400"  },
+  { label: "Blue",   value: "bg-blue-100 text-blue-800 border-blue-200",    dot: "bg-blue-400"   },
+  { label: "Purple", value: "bg-purple-100 text-purple-800 border-purple-200", dot: "bg-purple-400" },
+  { label: "Green",  value: "bg-green-100 text-green-800 border-green-200",  dot: "bg-green-400"  },
+  { label: "Gray",   value: "bg-gray-100 text-gray-800 border-gray-200",    dot: "bg-gray-400"   },
+  { label: "Orange", value: "bg-orange-100 text-orange-800 border-orange-200", dot: "bg-orange-400" },
+  { label: "Red",    value: "bg-red-100 text-red-800 border-red-200",       dot: "bg-red-400"    },
+  { label: "Teal",   value: "bg-teal-100 text-teal-800 border-teal-200",    dot: "bg-teal-400"   },
+  { label: "Pink",   value: "bg-pink-100 text-pink-800 border-pink-200",    dot: "bg-pink-400"   },
+  { label: "Indigo", value: "bg-indigo-100 text-indigo-800 border-indigo-200", dot: "bg-indigo-400" },
+  { label: "Cyan",   value: "bg-cyan-100 text-cyan-800 border-cyan-200",    dot: "bg-cyan-400"   },
+  { label: "Lime",   value: "bg-lime-100 text-lime-800 border-lime-200",    dot: "bg-lime-400"   },
+];
+
+export const DEFAULT_CATEGORIES: { code: string; label: string; color: string }[] = [
+  { code: "TOOL", label: "Tools",         color: COLOR_OPTIONS[0].value },
+  { code: "SENS", label: "Sensors",       color: COLOR_OPTIONS[1].value },
+  { code: "MOTR", label: "Motors",        color: COLOR_OPTIONS[2].value },
+  { code: "DEVB", label: "Dev Boards",    color: COLOR_OPTIONS[3].value },
+  { code: "CABL", label: "Cables",        color: COLOR_OPTIONS[4].value },
+  { code: "MECH", label: "Mechanical",    color: COLOR_OPTIONS[5].value },
+  { code: "POWR", label: "Power",         color: COLOR_OPTIONS[6].value },
+  { code: "MISC", label: "Miscellaneous", color: COLOR_OPTIONS[7].value },
+];
+
+// Fallback lookup maps for components created before dynamic categories existed
+export const CATEGORY_LABELS: Record<string, string> = Object.fromEntries(
+  DEFAULT_CATEGORIES.map((c) => [c.code, c.label])
+);
+export const CATEGORY_COLORS: Record<string, string> = Object.fromEntries(
+  DEFAULT_CATEGORIES.map((c) => [c.code, c.color])
+);
+
+export interface Component extends Record<string, unknown> {
+  id: string;
+  name: string;
+  category: string;
+  categoryLabel: string;
+  categoryColor: string;
+  year: number;
+  uniqueNum: number;
+  quantity: number;
+  description: string;
+  boxId: string;
+  boxName: string;
+  addedBy: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Box extends Record<string, unknown> {
+  id: string;
+  name: string;
+  location: string;
+  createdBy: string;
+  createdAt: string;
+  componentCount?: number;
+}
+
+export type TransactionType = "STOCK_IN" | "STOCK_OUT" | "CREATED" | "DELETED";
+
+export interface Transaction extends Record<string, unknown> {
+  id: string;
+  componentId: string;
+  componentName: string;
+  type: TransactionType;
+  quantityChange: number;
+  quantityAfter: number;
+  performedBy: string;
+  notes: string;
+  timestamp: string;
+}
+
+// Helper: resolve category label/color from the component itself (with fallbacks)
+export function getCategoryLabel(c: Component): string {
+  return c.categoryLabel || CATEGORY_LABELS[c.category] || c.category;
+}
+export function getCategoryColor(c: Component): string {
+  return c.categoryColor || CATEGORY_COLORS[c.category] || "bg-gray-100 text-gray-800 border-gray-200";
+}
