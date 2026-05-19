@@ -35,4 +35,7 @@ export const keys = {
   txCounter: () => `counter:tx`,
   category: (code: string) => `category:${code}`,
   categoriesAll: () => `categories:all`,
+  user: (userId: string) => `user:${userId}`,
+  usersAll: () => `users:all`,
+  userCounter: () => `counter:user`,
 };

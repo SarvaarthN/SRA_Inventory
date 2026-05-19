@@ -1,8 +1,7 @@
 export const dynamic = "force-dynamic";
 import { redis, keys } from "@/lib/redis";
-import { Component, CATEGORY_LABELS, CATEGORY_COLORS } from "@/lib/types";
-import Link from "next/link";
-import { Plus, Search } from "lucide-react";
+import { Component } from "@/lib/types";
+import { getSession } from "@/lib/session";
 import ComponentsClient from "./ComponentsClient";
 
 async function getComponents() {
@@ -17,6 +16,7 @@ async function getComponents() {
 }
 
 export default async function ComponentsPage() {
-  const components = await getComponents();
-  return <ComponentsClient initialComponents={components} />;
+  const [components, session] = await Promise.all([getComponents(), getSession()]);
+  const canWrite = session?.year === "TY" || session?.year === "LY";
+  return <ComponentsClient initialComponents={components} canWrite={canWrite} />;
 }

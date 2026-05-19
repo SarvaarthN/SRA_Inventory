@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 import { redis, keys } from "@/lib/redis";
 import { Component, Transaction, getCategoryLabel, getCategoryColor } from "@/lib/types";
+import { getSession } from "@/lib/session";
 import Link from "next/link";
 import { Package2, Box, AlertTriangle, TrendingUp, ArrowRight, Plus, ArrowLeftRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -35,7 +36,11 @@ async function getDashboardData() {
 }
 
 export default async function DashboardPage() {
-  const { components, transactions, boxCount } = await getDashboardData();
+  const [{ components, transactions, boxCount }, session] = await Promise.all([
+    getDashboardData(),
+    getSession(),
+  ]);
+  const canWrite = session?.year === "TY" || session?.year === "LY";
 
   const totalQty = components.reduce((s, c) => s + Number(c.quantity), 0);
   const lowStock = components.filter((c) => Number(c.quantity) > 0 && Number(c.quantity) <= 2);
@@ -80,20 +85,24 @@ export default async function DashboardPage() {
             <ArrowLeftRight className="w-4 h-4" />
             Check In/Out
           </Link>
-          <Link
-            href="/components/new"
-            className="flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Add Component
-          </Link>
-          <Link
-            href="/boxes/new"
-            className="flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            New Box
-          </Link>
+          {canWrite && (
+            <>
+              <Link
+                href="/components/new"
+                className="flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Add Component
+              </Link>
+              <Link
+                href="/boxes/new"
+                className="flex items-center gap-1.5 bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                New Box
+              </Link>
+            </>
+          )}
         </div>
       </div>
 

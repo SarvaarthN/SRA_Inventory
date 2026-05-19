@@ -32,9 +32,11 @@ const txTypeLabel: Record<string, string> = {
 export default function ComponentDetail({
   component: initial,
   transactions: initialTx,
+  canWrite,
 }: {
   component: Component;
   transactions: Transaction[];
+  canWrite: boolean;
 }) {
   const router = useRouter();
   const [component, setComponent] = useState(initial);
@@ -174,30 +176,32 @@ export default function ComponentDetail({
       <div className="grid grid-cols-2 sm:grid-cols-2 gap-2 sm:gap-3">
         <button
           onClick={() => { setStockDialog("in"); setStockQty("1"); }}
-          className="flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+          disabled={!canWrite}
+          className="flex items-center justify-center gap-2 bg-blue-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Plus className="w-4 h-4" />
           Stock In
         </button>
         <button
           onClick={() => { setStockDialog("out"); setStockQty("1"); }}
-          disabled={Number(component.quantity) === 0}
-          className="flex items-center justify-center gap-2 bg-amber-500 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors disabled:opacity-40"
+          disabled={Number(component.quantity) === 0 || !canWrite}
+          className="flex items-center justify-center gap-2 bg-amber-500 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Minus className="w-4 h-4" />
           Stock Out
         </button>
         <button
           onClick={() => setDeleteDialog("soft")}
-          disabled={Number(component.quantity) === 0}
-          className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-40"
+          disabled={Number(component.quantity) === 0 || !canWrite}
+          className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 py-2.5 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Minus className="w-4 h-4" />
           Clear Stock
         </button>
         <button
           onClick={() => setDeleteDialog("hard")}
-          className="flex items-center justify-center gap-2 bg-white border border-red-200 text-red-600 py-2.5 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors"
+          disabled={!canWrite}
+          className="flex items-center justify-center gap-2 bg-white border border-red-200 text-red-600 py-2.5 rounded-lg text-sm font-medium hover:bg-red-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Trash2 className="w-4 h-4" />
           Delete Component

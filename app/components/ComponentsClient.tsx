@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 const ALL = "ALL";
 
-export default function ComponentsClient({ initialComponents }: { initialComponents: Component[] }) {
+export default function ComponentsClient({ initialComponents, canWrite }: { initialComponents: Component[]; canWrite: boolean }) {
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState<string>(ALL);
 
@@ -38,14 +38,16 @@ export default function ComponentsClient({ initialComponents }: { initialCompone
           <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Components</h1>
           <p className="text-slate-500 text-sm mt-0.5">{initialComponents.length} total items</p>
         </div>
-        <Link
-          href="/components/new"
-          className="flex items-center gap-1.5 bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          <span className="hidden sm:inline">Add Component</span>
-          <span className="sm:hidden">Add</span>
-        </Link>
+        {canWrite && (
+          <Link
+            href="/components/new"
+            className="flex items-center gap-1.5 bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Add Component</span>
+            <span className="sm:hidden">Add</span>
+          </Link>
+        )}
       </div>
 
       {/* Search + filter */}

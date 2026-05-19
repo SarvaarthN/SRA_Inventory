@@ -60,13 +60,28 @@ export interface Component extends Record<string, unknown> {
   updatedAt: string;
 }
 
+export type BoxType = "GENERAL" | "EKLAVYA";
+
 export interface Box extends Record<string, unknown> {
   id: string;
   name: string;
   location: string;
   createdBy: string;
   createdAt: string;
+  boxType: string; // "GENERAL" | "EKLAVYA"
   componentCount?: number;
+}
+
+export type UserYear = "SY" | "TY" | "LY";
+
+export interface User extends Record<string, unknown> {
+  internalId: string;   // "USR-001"
+  name: string;
+  userId: string;       // login username
+  passwordHash: string;
+  year: string;         // "SY" | "TY" | "LY"
+  isAdmin: string;      // "true" | "false" (Redis hash values are strings)
+  createdAt: string;
 }
 
 export type TransactionType = "STOCK_IN" | "STOCK_OUT" | "CREATED" | "DELETED";

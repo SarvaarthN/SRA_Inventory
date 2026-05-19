@@ -39,10 +39,11 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, location, createdBy } = await req.json() as {
+    const { name, location, createdBy, boxType } = await req.json() as {
       name: string;
       location: string;
       createdBy: string;
+      boxType?: string;
     };
 
     if (!name || !location || !createdBy) {
@@ -53,7 +54,14 @@ export async function POST(req: NextRequest) {
     const id = `BOX-${String(num).padStart(3, "0")}`;
     const now = new Date().toISOString();
 
-    const box: Box = { id, name, location, createdBy, createdAt: now };
+    const box: Box = {
+      id,
+      name,
+      location,
+      createdBy,
+      createdAt: now,
+      boxType: boxType === "EKLAVYA" ? "EKLAVYA" : "GENERAL",
+    };
     const pipeline = redis.pipeline();
     pipeline.hset(keys.box(id), box);
     pipeline.sadd(keys.boxesAll(), id);

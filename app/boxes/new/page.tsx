@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ArrowLeft, Box, Plus } from "lucide-react";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
 
 export default function NewBoxPage() {
   const router = useRouter();
@@ -13,6 +14,7 @@ export default function NewBoxPage() {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
   const [createdBy, setCreatedBy] = useState("");
+  const [boxType, setBoxType] = useState<"GENERAL" | "EKLAVYA">("GENERAL");
 
   const handleCreate = async () => {
     if (!name.trim() || !location.trim() || !createdBy.trim()) {
@@ -24,7 +26,7 @@ export default function NewBoxPage() {
       const res = await fetch("/api/boxes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), location: location.trim(), createdBy: createdBy.trim() }),
+        body: JSON.stringify({ name: name.trim(), location: location.trim(), createdBy: createdBy.trim(), boxType }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
       const box = await res.json();
@@ -50,8 +52,37 @@ export default function NewBoxPage() {
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-4">
-        <div className="flex items-center justify-center w-12 h-12 bg-purple-50 rounded-xl mx-auto">
-          <Box className="w-6 h-6 text-purple-600" />
+        <div className={cn(
+          "flex items-center justify-center w-12 h-12 rounded-xl mx-auto",
+          boxType === "EKLAVYA" ? "bg-amber-50" : "bg-purple-50"
+        )}>
+          <Box className={cn("w-6 h-6", boxType === "EKLAVYA" ? "text-amber-600" : "text-purple-600")} />
+        </div>
+
+        <div className="space-y-1.5">
+          <Label>Box Type <span className="text-red-500">*</span></Label>
+          <div className="flex gap-2">
+            {(["GENERAL", "EKLAVYA"] as const).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => setBoxType(t)}
+                className={cn(
+                  "flex-1 py-2 rounded-lg text-sm font-medium border transition-colors",
+                  boxType === t
+                    ? t === "EKLAVYA"
+                      ? "border-amber-400 bg-amber-50 text-amber-700"
+                      : "border-purple-400 bg-purple-50 text-purple-700"
+                    : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                )}
+              >
+                {t === "GENERAL" ? "General" : "Eklavya"}
+              </button>
+            ))}
+          </div>
+          {boxType === "EKLAVYA" && (
+            <p className="text-xs text-amber-600">Eklavya boxes are highlighted in amber across the site.</p>
+          )}
         </div>
 
         <div className="space-y-1.5">

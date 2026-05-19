@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { redis, keys } from "@/lib/redis";
 import { Component, Transaction } from "@/lib/types";
 import { notFound } from "next/navigation";
+import { getSession } from "@/lib/session";
 import ComponentDetail from "./ComponentDetail";
 
 type Props = { params: Promise<{ id: string }> };
@@ -24,5 +25,7 @@ export default async function ComponentDetailPage({ params }: Props) {
   const decodedId = decodeURIComponent(id);
   const data = await getData(decodedId);
   if (!data) notFound();
-  return <ComponentDetail component={data.component} transactions={data.transactions} />;
+  const session = await getSession();
+  const canWrite = session?.year === "TY" || session?.year === "LY";
+  return <ComponentDetail component={data.component} transactions={data.transactions} canWrite={canWrite} />;
 }

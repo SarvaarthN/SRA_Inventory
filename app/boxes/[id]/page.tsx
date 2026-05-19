@@ -37,8 +37,15 @@ export default async function BoxDetailPage({ params }: Props) {
         <Link href="/boxes" className="text-slate-400 hover:text-slate-600 transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </Link>
-        <div>
-          <h1 className="text-xl font-bold text-slate-800">{box.name}</h1>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-slate-800 truncate">{box.name}</h1>
+            {box.boxType === "EKLAVYA" && (
+              <span className="text-[10px] font-bold uppercase tracking-wide text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded shrink-0">
+                Eklavya
+              </span>
+            )}
+          </div>
           <span className="font-mono text-sm text-slate-400">{box.id}</span>
         </div>
       </div>
