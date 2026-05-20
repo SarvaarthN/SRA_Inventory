@@ -1,111 +1,89 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Package2, Eye, EyeOff } from "lucide-react";
+import { Package2, Mail, ShieldAlert } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [userId, setUserId] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPw, setShowPw] = useState(false);
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [needsSetup, setNeedsSetup] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/auth/setup")
-      .then((r) => r.json())
-      .then((d) => setNeedsSetup(d.needsSetup))
-      .catch(() => {});
-  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!userId.trim() || !password) {
-      toast.error("Enter your User ID and password");
+    const cleanEmail = email.trim();
+    if (!cleanEmail) {
+      toast.error("Please enter your email address");
       return;
     }
+
     setLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: userId.trim(), password }),
+        body: JSON.stringify({ userId: cleanEmail }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      toast.success(`Welcome, ${data.user.name}`);
+
+      toast.success(`Welcome back, ${data.user.name}!`);
       router.push("/");
       router.refresh();
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : "Login failed");
+      toast.error(e instanceof Error ? e.message : "Authentication failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+    <div className="min-h-screen flex items-center justify-center px-4 bg-slate-50/50">
+      <div className="w-full max-w-md space-y-6">
+        <div className="text-center">
+          <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-indigo-100 animate-pulse">
             <Package2 className="w-7 h-7 text-white" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-800">SRA Inventory</h1>
-          <p className="text-slate-500 text-sm mt-1">Sign in to your account</p>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">SRA Inventory</h1>
+          <p className="text-slate-500 text-sm mt-1">Society of Robotics and Automation</p>
         </div>
 
-        <form onSubmit={handleLogin} className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
-          <div className="space-y-1.5">
-            <Label>User ID</Label>
-            <Input
-              placeholder="Enter your user ID"
-              value={userId}
-              onChange={(e) => setUserId(e.target.value)}
-              autoComplete="username"
-              autoFocus
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Password</Label>
-            <div className="relative">
-              <Input
-                type={showPw ? "text" : "password"}
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
-                className="pr-10"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPw(!showPw)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-              >
-                {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-slate-700 font-semibold text-xs tracking-wider uppercase">Gmail Address</Label>
+              <div className="relative">
+                <Input
+                  type="email"
+                  placeholder="enter-your-gmail@sra.org"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  autoComplete="email"
+                  className="pl-10 h-11"
+                  autoFocus
+                />
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              </div>
             </div>
-          </div>
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-indigo-600 text-white py-2.5 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-60"
-          >
-            {loading ? "Signing in..." : "Sign In"}
-          </button>
-        </form>
 
-        {needsSetup && (
-          <p className="text-center text-sm text-slate-500 mt-4">
-            First time?{" "}
-            <Link href="/setup" className="text-indigo-600 hover:underline font-medium">
-              Set up admin account
-            </Link>
-          </p>
-        )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full h-11 bg-indigo-600 text-white rounded-xl text-sm font-semibold hover:bg-indigo-700 transition-all disabled:opacity-60 shadow-sm active:scale-[0.98]"
+            >
+              {loading ? "Verifying..." : "Access Catalog"}
+            </button>
+          </form>
+
+          <div className="flex gap-2.5 p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100/50">
+            <ShieldAlert className="w-4.5 h-4.5 text-indigo-600 shrink-0 mt-0.5" />
+            <p className="text-[11px] text-indigo-950 font-medium leading-relaxed">
+              <strong>Admin Note:</strong> To grant a member access, simply add their Gmail and Role to your <strong>Users</strong> Google Sheet. Passwordless access is instant!
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

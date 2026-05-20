@@ -31,13 +31,13 @@ export async function GET() {
       [
         escape(c.id),
         escape(c.name),
-        escape(CATEGORY_LABELS[c.category] ?? c.category),
+        escape(c.category),
         c.quantity,
         escape(c.boxId),
         escape(c.boxName),
         escape(c.description),
         escape(c.addedBy),
-        escape(new Date(c.createdAt).toLocaleString()),
+        escape(c.createdAt),
       ].join(",")
     );
 

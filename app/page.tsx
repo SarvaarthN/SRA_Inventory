@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { redis, keys } from "@/lib/redis";
 import { Component, Transaction, getCategoryLabel, getCategoryColor } from "@/lib/types";
 import { getSession } from "@/lib/session";
+import RefreshOnMount from "@/components/RefreshOnMount";
 import Link from "next/link";
 import { Package2, Box, AlertTriangle, TrendingUp, ArrowRight, Plus, ArrowLeftRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -72,6 +73,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-4 sm:space-y-6">
+      <RefreshOnMount />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-800">Dashboard</h1>
@@ -107,20 +109,20 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4">
         {[
-          { label: "Total Components", value: components.length, icon: Package2, color: "text-indigo-600 bg-indigo-50" },
+          { label: "Total Components", value: components.length, icon: Package2, color: "text-indigo-600 bg-indigo-50   " },
           { label: "Total Units", value: totalQty, icon: TrendingUp, color: "text-blue-600 bg-blue-50" },
           { label: "Storage Boxes", value: boxCount, icon: Box, color: "text-purple-600 bg-purple-50" },
-          {
-            label: "Low / Out of Stock",
-            value: `${lowStock.length} / ${outOfStock.length}`,
-            icon: AlertTriangle,
-            color: outOfStock.length > 0 ? "text-red-600 bg-red-50" : lowStock.length > 0 ? "text-amber-600 bg-amber-50" : "text-green-600 bg-green-50",
-          },
+          // {
+          //   label: "Low / Out of Stock",
+          //   value: `${lowStock.length} / ${outOfStock.length}`,
+          //   icon: AlertTriangle,
+          //   color: outOfStock.length > 0 ? "text-red-600 bg-red-50" : lowStock.length > 0 ? "text-amber-600 bg-amber-50" : "text-green-600 bg-green-50",
+          // },
         ].map(({ label, value, icon: Icon, color }) => (
           <div key={label} className="bg-white rounded-xl border border-slate-200 p-4">
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${color} mb-3`}>
+            <div className={`w- h-9 rounded-lg flex items-center justify-center ${color} mb-3`}>
               <Icon className="w-5 h-5" />
             </div>
             <div className="text-2xl font-bold text-slate-800">{value}</div>

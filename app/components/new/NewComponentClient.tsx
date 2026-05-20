@@ -148,6 +148,7 @@ export default function NewComponentClient() {
       });
       if (!res.ok) throw new Error((await res.json()).error);
       toast.success(`Added ${qty} units to ${selectedComponent.name}`);
+      router.refresh();
       router.push(`/components/${encodeURIComponent(selectedComponent.id)}`);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed");
@@ -182,6 +183,7 @@ export default function NewComponentClient() {
       if (!res.ok) throw new Error((await res.json()).error);
       const created: Component = await res.json();
       toast.success(`Created ${created.id}`);
+      router.refresh();
       router.push(`/components/${encodeURIComponent(created.id)}`);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed");

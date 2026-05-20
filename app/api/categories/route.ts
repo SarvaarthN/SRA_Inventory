@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { redis, keys } from "@/lib/redis";
+import { redis, keys, queueSheetUpdate } from "@/lib/redis";
 import { CategoryDef, DEFAULT_CATEGORIES } from "@/lib/types";
 
 async function seedDefaults() {
@@ -81,6 +81,9 @@ export async function POST(req: NextRequest) {
     pipeline.hset(keys.category(upperCode), category);
     pipeline.sadd(keys.categoriesAll(), upperCode);
     await pipeline.exec();
+
+    // Sync in background to Google Sheets
+    queueSheetUpdate("Categories", "CREATE", "code", category.code, category);
 
     return NextResponse.json(category, { status: 201 });
   } catch (error) {

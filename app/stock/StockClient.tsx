@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { Component, getCategoryLabel, getCategoryColor } from "@/lib/types";
 import { toast } from "sonner";
 import { Search, MapPin, ArrowDownCircle, ArrowUpCircle, X, Package2, CheckCircle2, Lock } from "lucide-react";
@@ -31,6 +32,7 @@ export default function StockClient({
   canWrite: boolean;
   userName: string;
 }) {
+  const router = useRouter();
   const [query, setQuery] = useState("");
   const debounced = useDebounce(query, 200);
   const [results, setResults] = useState<Component[]>([]);
@@ -108,6 +110,7 @@ export default function StockClient({
 
       setLastDone({ id: action.componentId, mode: action.mode, qty });
       setAction(null);
+      router.refresh();
       toast.success(
         action.mode === "in"
           ? `Checked in ${qty} × ${component.name}`

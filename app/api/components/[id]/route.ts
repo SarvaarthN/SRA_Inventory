@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { redis, keys } from "@/lib/redis";
+import { redis, keys, queueSheetUpdate } from "@/lib/redis";
 import { Component, Transaction } from "@/lib/types";
 
 type Params = { params: Promise<{ id: string }> };
@@ -37,6 +37,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const now = new Date().toISOString();
     const pipeline = redis.pipeline();
+    let txToSync: Transaction | null = null;
 
     if (action === "STOCK_IN" || action === "STOCK_OUT") {
       if (!quantity || !performedBy) {
@@ -49,7 +50,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       }
       pipeline.hset(keys.component(decodedId), { quantity: newQty, updatedAt: now });
 
-      const txId = `TX-${await redis.incr(keys.txCounter())}`;
+      const txId = `TX-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
       const tx: Transaction = {
         id: txId,
         componentId: decodedId,
@@ -64,6 +65,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       pipeline.hset(keys.transaction(txId), tx);
       pipeline.zadd(keys.transactionsAll(), { score: Date.now(), member: txId });
       pipeline.zadd(keys.transactionsByComponent(decodedId), { score: Date.now(), member: txId });
+      txToSync = tx;
     } else if (action === "UPDATE_BOX") {
       pipeline.hset(keys.component(decodedId), {
         boxId: boxId ?? "",
@@ -74,6 +76,37 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     await pipeline.exec();
     const updated = await redis.hgetall<Component>(keys.component(decodedId));
+
+    if (updated) {
+      const sheetData = {
+        "Part Number": updated.id,
+        "Name": updated.name,
+        "Category": updated.category,
+        "Quantity": Number(updated.quantity),
+        "Box ID": updated.boxId,
+        "Box Name": updated.boxName,
+        "Description": updated.description,
+        "Added By": updated.addedBy,
+        "Created At": updated.createdAt,
+      };
+      queueSheetUpdate("Components", "UPDATE", "Part Number", updated.id, sheetData);
+    }
+
+    if (txToSync) {
+      const sheetTx = {
+        id: txToSync.id,
+        componentId: txToSync.componentId,
+        componentName: txToSync.componentName,
+        type: txToSync.type,
+        quantityChange: Number(txToSync.quantityChange),
+        quantityAfter: Number(txToSync.quantityAfter),
+        performedBy: txToSync.performedBy,
+        "notes`````": txToSync.notes,
+        timestamp: txToSync.timestamp
+      };
+      queueSheetUpdate("Transactions", "CREATE", "id", txToSync.id, sheetTx);
+    }
+
     return NextResponse.json(updated);
   } catch (error) {
     console.error(error);
@@ -105,7 +138,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       pipeline.hset(keys.component(decodedId), { quantity: 0, updatedAt: now });
     }
 
-    const txId = `TX-${await redis.incr(keys.txCounter())}`;
+    const txId = `TX-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
     const tx: Transaction = {
       id: txId,
       componentId: decodedId,
@@ -124,6 +157,38 @@ export async function DELETE(req: NextRequest, { params }: Params) {
     pipeline.zadd(keys.transactionsByComponent(decodedId), { score: Date.now(), member: txId });
 
     await pipeline.exec();
+
+    // Sync in background to Google Sheets
+    if (hardDelete) {
+      queueSheetUpdate("Components", "DELETE", "Part Number", decodedId, null);
+    } else {
+      const sheetData = {
+        "Part Number": component.id,
+        "Name": component.name,
+        "Category": component.category,
+        "Quantity": 0,
+        "Box ID": component.boxId,
+        "Box Name": component.boxName,
+        "Description": component.description,
+        "Added By": component.addedBy,
+        "Created At": component.createdAt,
+      };
+      queueSheetUpdate("Components", "UPDATE", "Part Number", component.id, sheetData);
+    }
+
+    const sheetTx = {
+      id: tx.id,
+      componentId: tx.componentId,
+      componentName: tx.componentName,
+      type: tx.type,
+      quantityChange: Number(tx.quantityChange),
+      quantityAfter: Number(tx.quantityAfter),
+      performedBy: tx.performedBy,
+      "notes`````": tx.notes,
+      timestamp: tx.timestamp
+    };
+    queueSheetUpdate("Transactions", "CREATE", "id", tx.id, sheetTx);
+
     return NextResponse.json({ success: true, hardDelete });
   } catch (error) {
     console.error(error);

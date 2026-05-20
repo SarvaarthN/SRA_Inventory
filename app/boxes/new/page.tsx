@@ -31,6 +31,7 @@ export default function NewBoxPage() {
       if (!res.ok) throw new Error((await res.json()).error);
       const box = await res.json();
       toast.success(`Box ${box.id} created`);
+      router.refresh();
       router.push("/boxes");
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed");

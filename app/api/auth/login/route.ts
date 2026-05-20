@@ -1,43 +1,46 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
 import { redis, keys } from "@/lib/redis";
 import { User } from "@/lib/types";
 import { createSession, SessionPayload } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId, password } = (await req.json()) as {
+    const { userId } = (await req.json()) as {
       userId: string;
-      password: string;
     };
 
-    if (!userId?.trim() || !password) {
-      return NextResponse.json({ error: "Missing credentials" }, { status: 400 });
+    if (!userId?.trim()) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
-    const user = await redis.hgetall<User>(keys.user(userId.trim().toLowerCase()));
+    const email = userId.trim().toLowerCase();
+
+    // Check if user email is present in the Users spreadsheet
+    const user = await redis.hgetall<User>(keys.user(email));
     if (!user) {
-      return NextResponse.json({ error: "Invalid user ID or password" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Your email is not authorized. Please contact the Electronics Head." },
+        { status: 401 }
+      );
     }
 
-    const match = await bcrypt.compare(password, user.passwordHash);
-    if (!match) {
-      return NextResponse.json({ error: "Invalid user ID or password" }, { status: 401 });
-    }
+    // Auto-generate internal USR-XXX ID if missing
+    const internalId = user.internalId || `USR-${String(await redis.incr(keys.userCounter())).padStart(3, "0")}`;
 
     const payload: SessionPayload = {
-      id: user.internalId,
-      name: user.name,
-      userId: user.userId,
-      year: user.year as SessionPayload["year"],
-      isAdmin: user.isAdmin === "true",
+      id: internalId,
+      name: String(user.name || email.split("@")[0]),
+      userId: email,
+      year: (user.year || "SY") as SessionPayload["year"],
+      isAdmin: String(user.isAdmin).toLowerCase() === "true",
     };
+    
     await createSession(payload);
 
     return NextResponse.json({ ok: true, user: payload });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Login failed" }, { status: 500 });
+    console.error("Login error:", error);
+    return NextResponse.json({ error: "Authentication failed" }, { status: 500 });
   }
 }

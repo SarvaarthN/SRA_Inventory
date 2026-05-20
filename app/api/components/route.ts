@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { redis, keys } from "@/lib/redis";
+import { redis, keys, queueSheetUpdate } from "@/lib/redis";
 import { Component, Transaction } from "@/lib/types";
 
 export async function GET() {
@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     pipeline.sadd(keys.componentsAll(), id);
     pipeline.sadd(keys.componentsByCategory(category), id);
 
-    const txId = `TX-${await redis.incr(keys.txCounter())}`;
+    const txId = `TX-${Date.now().toString().slice(-6)}-${Math.random().toString(36).substring(2, 5).toUpperCase()}`;
     const tx: Transaction = {
       id: txId,
       componentId: id,
@@ -96,6 +96,33 @@ export async function POST(req: NextRequest) {
     pipeline.zadd(keys.transactionsByComponent(id), { score: Date.now(), member: txId });
 
     await pipeline.exec();
+
+    // Sync in background to Google Sheets
+    const sheetData = {
+      "Part Number": component.id,
+      "Name": component.name,
+      "Category": component.category,
+      "Quantity": Number(component.quantity),
+      "Box ID": component.boxId,
+      "Box Name": component.boxName,
+      "Description": component.description,
+      "Added By": component.addedBy,
+      "Created At": component.createdAt,
+    };
+    queueSheetUpdate("Components", "CREATE", "Part Number", component.id, sheetData);
+
+    const sheetTx = {
+      id: tx.id,
+      componentId: tx.componentId,
+      componentName: tx.componentName,
+      type: tx.type,
+      quantityChange: Number(tx.quantityChange),
+      quantityAfter: Number(tx.quantityAfter),
+      performedBy: tx.performedBy,
+      "notes`````": tx.notes,
+      timestamp: tx.timestamp
+    };
+    queueSheetUpdate("Transactions", "CREATE", "id", tx.id, sheetTx);
 
     return NextResponse.json(component, { status: 201 });
   } catch (error) {

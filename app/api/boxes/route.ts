@@ -1,7 +1,8 @@
 export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
-import { redis, keys } from "@/lib/redis";
+import { redis, keys, queueSheetUpdate } from "@/lib/redis";
 import { Box, Component } from "@/lib/types";
+
 
 export async function GET() {
   try {
@@ -66,6 +67,16 @@ export async function POST(req: NextRequest) {
     pipeline.hset(keys.box(id), box);
     pipeline.sadd(keys.boxesAll(), id);
     await pipeline.exec();
+
+    // Sync in background to Google Sheets
+    queueSheetUpdate("Boxes", "CREATE", "1ID", box.id, {
+      "1ID": box.id,
+      name: box.name,
+      location: box.location,
+      createdBy: box.createdBy,
+      createdAt: box.createdAt,
+      boxType: box.boxType
+    });
 
     return NextResponse.json(box, { status: 201 });
   } catch (error) {

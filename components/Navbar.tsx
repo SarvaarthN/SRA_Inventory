@@ -130,7 +130,7 @@ export default function Navbar({ session }: { session: SessionPayload | null }) 
                 <span className={cn("text-[10px] font-semibold px-1.5 py-0.5 rounded", YEAR_BADGE[session.year] ?? YEAR_BADGE.SY)}>
                   {session.year}
                 </span>
-                <span className="text-xs font-medium text-slate-600 max-w-[80px] truncate">{session.name.split(" ")[0]}</span>
+                <span className="text-xs font-medium text-slate-600 max-w-[80px] truncate">{String(session.name || "").split(" ")[0]}</span>
                 <button onClick={handleLogout} className="text-slate-400 hover:text-red-500 p-1">
                   <LogOut className="w-4 h-4" />
                 </button>
