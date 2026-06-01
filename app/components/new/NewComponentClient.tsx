@@ -46,11 +46,10 @@ export default function NewComponentClient() {
   const [notes, setNotes] = useState("");
 
   // Box search
+  const [allBoxes, setAllBoxes] = useState<Box[]>([]);
   const [boxSearch, setBoxSearch] = useState("");
-  const debouncedBox = useDebounce(boxSearch, 250);
-  const [boxSuggestions, setBoxSuggestions] = useState<Box[]>([]);
   const [selectedBox, setSelectedBox] = useState<Box | null>(null);
-  const [showBoxDropdown, setShowBoxDropdown] = useState(false);
+  const [boxFocused, setBoxFocused] = useState(false);
 
   // Create form
   const [name, setName] = useState("");
@@ -70,6 +69,10 @@ export default function NewComponentClient() {
       .then((r) => r.json())
       .then((data: CategoryDef[]) => { setCategories(data); setCatLoading(false); })
       .catch(() => setCatLoading(false));
+    fetch("/api/boxes")
+      .then((r) => r.json())
+      .then((data: Box[]) => setAllBoxes(data))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -78,11 +81,12 @@ export default function NewComponentClient() {
       .then((r) => r.json()).then(setSuggestions).catch(() => {});
   }, [debouncedSearch]);
 
-  useEffect(() => {
-    if (!debouncedBox.trim()) { setBoxSuggestions([]); return; }
-    fetch(`/api/search?q=${encodeURIComponent(debouncedBox)}&type=boxes`)
-      .then((r) => r.json()).then(setBoxSuggestions).catch(() => {});
-  }, [debouncedBox]);
+  const boxSuggestions = !selectedBox && boxSearch.trim()
+    ? allBoxes.filter((b) => {
+        const q = boxSearch.toLowerCase();
+        return b.name.toLowerCase().includes(q) || b.id.toLowerCase().includes(q) || String(b.location ?? "").toLowerCase().includes(q);
+      }).slice(0, 8)
+    : [];
 
   const handleSelectComponent = (c: Component) => {
     setSelectedComponent(c);
@@ -97,8 +101,6 @@ export default function NewComponentClient() {
   const handleSelectBox = (b: Box) => {
     setSelectedBox(b);
     setBoxSearch(`${b.name} (${b.id})`);
-    setBoxSuggestions([]);
-    setShowBoxDropdown(false);
   };
 
   const handleCreateCategory = async () => {
@@ -325,10 +327,11 @@ export default function NewComponentClient() {
             <Input
               placeholder="Search or type box name..."
               value={boxSearch}
-              onChange={(e) => { setBoxSearch(e.target.value); setSelectedBox(null); setShowBoxDropdown(true); }}
-              onFocus={() => setShowBoxDropdown(true)}
+              onChange={(e) => { setBoxSearch(e.target.value); setSelectedBox(null); }}
+              onFocus={() => setBoxFocused(true)}
+              onBlur={() => setTimeout(() => setBoxFocused(false), 150)}
             />
-            {showBoxDropdown && boxSuggestions.length > 0 && (
+            {boxFocused && boxSuggestions.length > 0 && (
               <div className="absolute top-full mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-lg z-10 overflow-hidden">
                 {boxSuggestions.map((b) => (
                   <button key={b.id} className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0"

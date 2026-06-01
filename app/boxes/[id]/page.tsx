@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, MapPin, User, Package2, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
+import DeleteBoxButton from "./DeleteBoxButton";
 
 type Props = { params: Promise<{ id: string }> };
 
@@ -48,6 +49,7 @@ export default async function BoxDetailPage({ params }: Props) {
           </div>
           <span className="font-mono text-sm text-slate-400">{box.id}</span>
         </div>
+        <DeleteBoxButton id={box.id} hasComponents={contents.length > 0} />
       </div>
 
       <div className="bg-white rounded-xl border border-slate-200 p-5">
