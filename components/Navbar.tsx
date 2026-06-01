@@ -45,9 +45,7 @@ export default function Navbar({ session }: { session: SessionPayload | null }) 
           <div className="flex items-center justify-between h-14">
             <div className="flex items-center gap-5">
               <Link href="/" className="flex items-center gap-2 font-semibold text-slate-800 shrink-0">
-                <div className="w-7 h-7 bg-indigo-600 rounded-md flex items-center justify-center">
-                  <Package2 className="w-4 h-4 text-white" />
-                </div>
+                <img src="/sra_logo.png" alt="SRA" className="w-7 h-7 object-contain" />
                 <span>SRA Inventory</span>
               </Link>
               <nav className="flex items-center gap-0.5">

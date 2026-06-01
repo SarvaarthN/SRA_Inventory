@@ -5,16 +5,25 @@ import { redis, keys } from "@/lib/redis";
 import { User } from "@/lib/types";
 import { createSession, SessionPayload } from "@/lib/session";
 
+async function hasAdmin(): Promise<boolean> {
+  const userIds = await redis.smembers(keys.usersAll());
+  if (!userIds.length) return false;
+  const pipeline = redis.pipeline();
+  userIds.forEach((id) => pipeline.hgetall(keys.user(id)));
+  const results = await pipeline.exec();
+  return (results.map((r) => r as User | null).filter(Boolean) as User[]).some((u) => String(u.isAdmin) === "true");
+}
+
 export async function GET() {
-  const count = await redis.scard(keys.usersAll());
-  return NextResponse.json({ needsSetup: count === 0 });
+  const adminExists = await hasAdmin();
+  return NextResponse.json({ needsSetup: !adminExists });
 }
 
 export async function POST(req: NextRequest) {
   try {
-    const count = await redis.scard(keys.usersAll());
-    if (count > 0) {
-      return NextResponse.json({ error: "Setup already complete" }, { status: 403 });
+    const adminExists = await hasAdmin();
+    if (adminExists) {
+      return NextResponse.json({ error: "An admin account already exists" }, { status: 403 });
     }
 
     const { name, userId, password } = (await req.json()) as {

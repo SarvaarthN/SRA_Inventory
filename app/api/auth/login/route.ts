@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       name: user.name,
       userId: user.userId,
       year: user.year as SessionPayload["year"],
-      isAdmin: user.isAdmin === "true",
+      isAdmin: String(user.isAdmin) === "true",
     };
     await createSession(payload);
 

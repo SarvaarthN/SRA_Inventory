@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Package2, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
@@ -51,9 +51,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Package2 className="w-7 h-7 text-white" />
-          </div>
+          <img src="/sra_logo.png" alt="SRA" className="w-12 h-12 object-contain mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-slate-800">SRA Inventory</h1>
           <p className="text-slate-500 text-sm mt-1">Sign in to your account</p>
         </div>

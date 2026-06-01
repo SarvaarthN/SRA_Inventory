@@ -4,7 +4,7 @@ import { decryptToken, SESSION_COOKIE } from "@/lib/session";
 
 const PUBLIC_PATHS = ["/login", "/setup"];
 
-export async function proxy(req: NextRequest) {
+export default async function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
 
   // Let API routes handle their own auth

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Package2, Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -47,11 +47,9 @@ export default function SetupPage() {
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Package2 className="w-7 h-7 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold text-slate-800">First Time Setup</h1>
-          <p className="text-slate-500 text-sm mt-1">Create the admin account</p>
+          <img src="/sra_logo.png" alt="SRA" className="w-12 h-12 object-contain mx-auto mb-4" />
+          <h1 className="text-2xl font-bold text-slate-800">Admin Setup</h1>
+          <p className="text-slate-500 text-sm mt-1">Create an admin account</p>
         </div>
 
         <form onSubmit={handleSetup} className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4 shadow-sm">
@@ -94,7 +92,7 @@ export default function SetupPage() {
             </div>
           </div>
           <div className="bg-indigo-50 rounded-lg px-3 py-2 text-xs text-indigo-700">
-            This creates the admin account (TY level + admin access). Add other users from the Admin panel after setup.
+            Creates an admin account (TY level + admin access). Only available when no admin exists.
           </div>
           <button
             type="submit"
