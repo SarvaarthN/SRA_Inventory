@@ -38,6 +38,7 @@ export const keys = {
   order: (id: string) => `order:${id}`,
   ordersAll: () => `orders:all`,
   orderCounter: () => `counter:order`,
+  orderReceiveLock: (id: string) => `order:${id}:receiving`,
   user: (userId: string) => `user:${userId}`,
   usersAll: () => `users:all`,
   userCounter: () => `counter:user`,

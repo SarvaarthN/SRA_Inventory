@@ -60,6 +60,24 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
     const receiver = performedBy.trim();
     const reference = order.orderNumber ? `${order.vendor} #${order.orderNumber}` : order.vendor;
+
+    // The status check above is read-then-write, so two requests arriving
+    // together can both pass it and apply the stock twice. Claim the order
+    // with a SET NX first: only one caller can win, and the loser is turned
+    // away before anything is written. The lock expires on its own so a
+    // crashed request can't wedge the order forever.
+    const claimed = await redis.set(keys.orderReceiveLock(orderId), receiver, {
+      nx: true,
+      ex: 30,
+    });
+    if (!claimed) {
+      return NextResponse.json(
+        { error: "This order is already being received" },
+        { status: 409 }
+      );
+    }
+
+    try {
     const pipeline = redis.pipeline();
     // Items are written back with the component ids filled in, so the order
     // page can link to the parts it produced.
@@ -149,6 +167,12 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       receivedBy: receiver,
       items: resolvedItems,
     });
+    } catch (err) {
+      // Nothing was committed, so drop the claim and let it be retried at
+      // once rather than making everyone wait for the lock to expire.
+      await redis.del(keys.orderReceiveLock(orderId));
+      throw err;
+    }
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Failed to update order" }, { status: 500 });
