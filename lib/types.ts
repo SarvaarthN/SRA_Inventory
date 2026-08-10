@@ -84,7 +84,12 @@ export interface User extends Record<string, unknown> {
   createdAt: string;
 }
 
-export type TransactionType = "STOCK_IN" | "STOCK_OUT" | "CREATED" | "DELETED";
+export type TransactionType =
+  | "STOCK_IN"
+  | "STOCK_OUT"
+  | "CREATED"
+  | "DELETED"
+  | "ORDER_RECEIVED";
 
 export interface Transaction extends Record<string, unknown> {
   id: string;
@@ -96,6 +101,65 @@ export interface Transaction extends Record<string, unknown> {
   performedBy: string;
   notes: string;
   timestamp: string;
+}
+
+export type OrderStatus = "ORDERED" | "RECEIVED" | "CANCELLED";
+
+// One line of a vendor order. `componentId` is set when the order tops up a part
+// that already exists; when it's empty the component is created on receive.
+export interface OrderItem {
+  componentId: string;
+  name: string;
+  category: string;
+  categoryLabel: string;
+  categoryColor: string;
+  quantity: number;
+  boxId: string;
+  boxName: string;
+}
+
+export interface Order extends Record<string, unknown> {
+  id: string;           // "ORD-001"
+  vendor: string;       // "Robu.in", "Amazon", ...
+  vendorUrl: string;
+  orderNumber: string;  // the vendor's own reference
+  status: string;       // OrderStatus, stored as a string like Box.boxType
+  orderedAt: string;    // ISO date
+  expectedAt: string;   // ISO date, drives the "arriving when" ordering
+  receivedAt: string;   // "" until received
+  orderedBy: string;
+  receivedBy: string;
+  totalCost: string;
+  notes: string;
+  items: OrderItem[];
+}
+
+// Items live in a single Redis hash field. We write them with JSON.stringify,
+// but @upstash/redis JSON-parses values on read, so what comes back is already
+// an array. Accept both shapes rather than assuming either one.
+export function parseOrderItems(raw: unknown): OrderItem[] {
+  if (Array.isArray(raw)) return raw as OrderItem[];
+  if (typeof raw === "string") {
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? (parsed as OrderItem[]) : [];
+    } catch {
+      return [];
+    }
+  }
+  return [];
+}
+
+export const ORDER_STATUS_STYLES: Record<string, string> = {
+  ORDERED: "bg-blue-100 text-blue-800 border-blue-200",
+  RECEIVED: "bg-green-100 text-green-800 border-green-200",
+  CANCELLED: "bg-gray-100 text-gray-600 border-gray-200",
+};
+
+// An order is late when it was expected before today and still hasn't arrived.
+export function isOverdue(order: Pick<Order, "status" | "expectedAt">): boolean {
+  if (order.status !== "ORDERED" || !order.expectedAt) return false;
+  return new Date(order.expectedAt).getTime() < Date.now();
 }
 
 // Helper: resolve category label/color from the component itself (with fallbacks)
