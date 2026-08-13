@@ -1,9 +1,9 @@
 "use client";
-import { useState } from "react";
-import { Component, Transaction, getCategoryLabel, getCategoryColor } from "@/lib/types";
+import { useState, useEffect } from "react";
+import { Box, Component, Transaction, getCategoryLabel, getCategoryColor } from "@/lib/types";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, Minus, Trash2, Package2, MapPin, Clock, User } from "lucide-react";
+import { ArrowLeft, Plus, Minus, Trash2, Package2, MapPin, Clock, User, Pencil } from "lucide-react";
 import Link from "next/link";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,12 +21,14 @@ const txTypeColor: Record<string, string> = {
   STOCK_IN: "text-blue-700 bg-blue-50 border-blue-100",
   STOCK_OUT: "text-amber-700 bg-amber-50 border-amber-100",
   DELETED: "text-red-700 bg-red-50 border-red-100",
+  ORDER_RECEIVED: "text-indigo-700 bg-indigo-50 border-indigo-100",
 };
 const txTypeLabel: Record<string, string> = {
   CREATED: "Created",
   STOCK_IN: "Stock In",
   STOCK_OUT: "Stock Out",
   DELETED: "Deleted",
+  ORDER_RECEIVED: "Order Received",
 };
 
 export default function ComponentDetail({
@@ -52,6 +54,57 @@ export default function ComponentDetail({
   // Delete dialog
   const [deleteDialog, setDeleteDialog] = useState<"soft" | "hard" | null>(null);
   const [deleteBy, setDeleteBy] = useState("");
+
+  // Box assignment dialog. Components can exist without a box (an order can be
+  // logged before anyone decides where the parts will live), so this is the way
+  // to place them afterwards.
+  const [boxDialog, setBoxDialog] = useState(false);
+  const [boxSearch, setBoxSearch] = useState("");
+  const [boxSuggestions, setBoxSuggestions] = useState<Box[]>([]);
+  const [pickedBox, setPickedBox] = useState<Box | null>(null);
+
+  useEffect(() => {
+    if (!boxDialog) return;
+    const t = setTimeout(() => {
+      if (!boxSearch.trim()) {
+        setBoxSuggestions([]);
+        return;
+      }
+      fetch(`/api/search?q=${encodeURIComponent(boxSearch)}&type=boxes`)
+        .then((r) => r.json())
+        .then(setBoxSuggestions)
+        .catch(() => {});
+    }, 250);
+    return () => clearTimeout(t);
+  }, [boxSearch, boxDialog]);
+
+  const handleAssignBox = async (box: Box | null) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/components/${encodeURIComponent(component.id)}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "UPDATE_BOX",
+          boxId: box?.id ?? "",
+          boxName: box?.name ?? "",
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      const updated: Component = await res.json();
+      setComponent(updated);
+      toast.success(box ? `Moved to ${box.name}` : "Removed from box");
+      setBoxDialog(false);
+      setBoxSearch("");
+      setBoxSuggestions([]);
+      setPickedBox(null);
+      router.refresh();
+    } catch (e: unknown) {
+      toast.error(e instanceof Error ? e.message : "Failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleStock = async () => {
     if (!stockBy.trim()) { toast.error("Please enter your name"); return; }
@@ -146,15 +199,36 @@ export default function ComponentDetail({
           <p className="text-sm text-slate-600">{component.description}</p>
         )}
         <div className="grid grid-cols-2 gap-4 text-sm">
-          {component.boxName && (
-            <div className="flex items-start gap-2">
-              <MapPin className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
-              <div>
-                <div className="font-medium text-slate-700">{component.boxName}</div>
-                <div className="text-xs text-slate-400 font-mono">{component.boxId}</div>
-              </div>
+          <div className="flex items-start gap-2">
+            <MapPin
+              className={`w-4 h-4 mt-0.5 shrink-0 ${component.boxId ? "text-slate-400" : "text-amber-500"}`}
+            />
+            <div className="min-w-0">
+              <div className="text-slate-500 text-xs">Box</div>
+              {component.boxId ? (
+                <>
+                  <div className="font-medium text-slate-700 truncate">{component.boxName}</div>
+                  <div className="text-xs text-slate-400 font-mono">{component.boxId}</div>
+                </>
+              ) : (
+                <div className="font-medium text-amber-600">Not in a box</div>
+              )}
+              {canWrite && (
+                <button
+                  onClick={() => {
+                    setBoxSearch("");
+                    setBoxSuggestions([]);
+                    setPickedBox(null);
+                    setBoxDialog(true);
+                  }}
+                  className="flex items-center gap-1 text-xs text-indigo-600 hover:text-indigo-700 font-medium mt-1"
+                >
+                  <Pencil className="w-3 h-3" />
+                  {component.boxId ? "Change box" : "Assign a box"}
+                </button>
+              )}
             </div>
-          )}
+          </div>
           <div className="flex items-start gap-2">
             <User className="w-4 h-4 text-slate-400 mt-0.5 shrink-0" />
             <div>
@@ -223,6 +297,7 @@ export default function ComponentDetail({
                 <div className="flex-1 min-w-0">
                   <div className="text-sm text-slate-600">
                     {tx.type === "STOCK_IN" && <span className="text-blue-600 font-semibold">+{tx.quantityChange}</span>}
+                    {tx.type === "ORDER_RECEIVED" && <span className="text-indigo-600 font-semibold">+{tx.quantityChange}</span>}
                     {tx.type === "STOCK_OUT" && <span className="text-amber-600 font-semibold">-{tx.quantityChange}</span>}
                     {" "}by <span className="font-medium">{tx.performedBy}</span>
                   </div>
@@ -312,6 +387,96 @@ export default function ComponentDetail({
                 {loading ? "..." : deleteDialog === "hard" ? "Delete Forever" : "Clear Stock"}
               </button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign / change box */}
+      <Dialog open={boxDialog} onOpenChange={setBoxDialog}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MapPin className="w-4 h-4" />
+              {component.boxId ? "Change Box" : "Assign a Box"}
+            </DialogTitle>
+            <DialogDescription>
+              {component.boxId
+                ? `${component.name} is currently in ${component.boxName}.`
+                : `${component.name} isn't in a box yet.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-1">
+            <div className="space-y-1.5">
+              <Label>Search Box</Label>
+              <Input
+                placeholder="Type a box name or location..."
+                value={boxSearch}
+                onChange={(e) => {
+                  setBoxSearch(e.target.value);
+                  setPickedBox(null);
+                }}
+              />
+              {boxSuggestions.length > 0 && (
+                <div className="border border-slate-200 rounded-lg overflow-hidden max-h-52 overflow-y-auto">
+                  {boxSuggestions.map((b) => (
+                    <button
+                      key={b.id}
+                      onClick={() => {
+                        setPickedBox(b);
+                        setBoxSearch(`${b.name} (${b.id})`);
+                        setBoxSuggestions([]);
+                      }}
+                      className="w-full text-left px-3 py-2 hover:bg-slate-50 transition-colors border-b border-slate-50 last:border-0"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-slate-700">{b.name}</span>
+                        <span className="text-xs text-slate-400 font-mono">{b.id}</span>
+                      </div>
+                      <div className="text-xs text-slate-400 mt-0.5">{b.location}</div>
+                    </button>
+                  ))}
+                </div>
+              )}
+              {pickedBox && (
+                <div className="flex items-center gap-2 p-2.5 bg-indigo-50 rounded-lg">
+                  <MapPin className="w-4 h-4 text-indigo-500 shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-indigo-800 truncate">{pickedBox.name}</div>
+                    <div className="text-xs text-indigo-500 font-mono">{pickedBox.id}</div>
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-slate-400">
+                No box yet?{" "}
+                <Link href="/boxes/new" className="text-indigo-600 hover:underline">
+                  Create one
+                </Link>
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setBoxDialog(false)}
+                className="flex-1 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => handleAssignBox(pickedBox)}
+                disabled={loading || !pickedBox}
+                className="flex-1 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 transition-colors disabled:opacity-60"
+              >
+                {loading ? "Saving..." : "Move Here"}
+              </button>
+            </div>
+            {component.boxId && (
+              <button
+                onClick={() => handleAssignBox(null)}
+                disabled={loading}
+                className="w-full text-xs text-slate-400 hover:text-red-600 transition-colors disabled:opacity-60"
+              >
+                Remove from box
+              </button>
+            )}
           </div>
         </DialogContent>
       </Dialog>

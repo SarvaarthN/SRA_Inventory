@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Package2, Box, History, LayoutDashboard,
-  Download, Tag, ArrowLeftRight, Users, LogOut, ShieldCheck,
+  Download, Tag, ArrowLeftRight, Users, LogOut, ShieldCheck, Truck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SessionPayload } from "@/lib/session";
@@ -14,6 +14,7 @@ const allNav = [
   { href: "/stock",      label: "Check In/Out", short: "Check I/O", icon: ArrowLeftRight },
   { href: "/components", label: "Components", short: "Parts",   icon: Package2 },
   { href: "/boxes",      label: "Boxes",      short: "Boxes",   icon: Box },
+  { href: "/orders",     label: "Orders",     short: null,      icon: Truck },
   { href: "/categories", label: "Categories", short: null,      icon: Tag },
   { href: "/transactions", label: "History",  short: "History", icon: History },
 ];

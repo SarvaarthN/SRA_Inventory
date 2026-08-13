@@ -19,12 +19,14 @@ const txTypeColor: Record<string, string> = {
   STOCK_IN: "text-blue-700 bg-blue-50 border-blue-100",
   STOCK_OUT: "text-amber-700 bg-amber-50 border-amber-100",
   DELETED: "text-red-700 bg-red-50 border-red-100",
+  ORDER_RECEIVED: "text-indigo-700 bg-indigo-50 border-indigo-100",
 };
 const txTypeLabel: Record<string, string> = {
   CREATED: "Created",
   STOCK_IN: "Stock In",
   STOCK_OUT: "Stock Out",
   DELETED: "Deleted",
+  ORDER_RECEIVED: "Order Received",
 };
 
 export default async function TransactionsPage() {
@@ -77,6 +79,7 @@ export default async function TransactionsPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       {tx.type === "STOCK_IN" && <span className="text-sm font-semibold text-blue-600">+{tx.quantityChange}</span>}
+                      {tx.type === "ORDER_RECEIVED" && <span className="text-sm font-semibold text-indigo-600">+{tx.quantityChange}</span>}
                       {tx.type === "STOCK_OUT" && <span className="text-sm font-semibold text-amber-600">-{tx.quantityChange}</span>}
                       {(tx.type === "CREATED" || tx.type === "DELETED") && <span className="text-sm text-slate-400">{tx.quantityChange}</span>}
                     </td>
@@ -103,6 +106,7 @@ export default async function TransactionsPage() {
                       {txTypeLabel[tx.type]}
                     </span>
                     {tx.type === "STOCK_IN" && <span className="text-sm font-bold text-blue-600">+{tx.quantityChange}</span>}
+                    {tx.type === "ORDER_RECEIVED" && <span className="text-sm font-bold text-indigo-600">+{tx.quantityChange}</span>}
                     {tx.type === "STOCK_OUT" && <span className="text-sm font-bold text-amber-600">-{tx.quantityChange}</span>}
                   </div>
                   <div className="text-right shrink-0">
