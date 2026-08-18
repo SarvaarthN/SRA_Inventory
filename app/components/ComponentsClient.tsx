@@ -8,7 +8,15 @@ import { cn } from "@/lib/utils";
 
 const ALL = "ALL";
 
-export default function ComponentsClient({ initialComponents, canWrite }: { initialComponents: Component[]; canWrite: boolean }) {
+export default function ComponentsClient({
+  initialComponents,
+  boxLocations,
+  canWrite,
+}: {
+  initialComponents: Component[];
+  boxLocations: Record<string, string>;
+  canWrite: boolean;
+}) {
   const [search, setSearch] = useState("");
   const [selectedCat, setSelectedCat] = useState<string>(ALL);
 
@@ -27,7 +35,8 @@ export default function ComponentsClient({ initialComponents, canWrite }: { init
       c.name.toLowerCase().includes(q) ||
       c.id.toLowerCase().includes(q) ||
       (c.description ?? "").toLowerCase().includes(q) ||
-      (c.boxName ?? "").toLowerCase().includes(q);
+      (c.boxName ?? "").toLowerCase().includes(q) ||
+      (boxLocations[c.boxId] ?? "").toLowerCase().includes(q);
     return matchesCat && matchesSearch;
   });
 
@@ -133,6 +142,12 @@ export default function ComponentsClient({ initialComponents, canWrite }: { init
                         <div>
                           <div className="text-sm text-slate-700">{c.boxName}</div>
                           <div className="text-xs text-slate-400 font-mono">{c.boxId}</div>
+                          {boxLocations[c.boxId] && (
+                            <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
+                              <MapPin className="w-3 h-3 shrink-0 text-slate-400" />
+                              <span>{boxLocations[c.boxId]}</span>
+                            </div>
+                          )}
                         </div>
                       ) : (
                         <span className="text-slate-300 text-sm">—</span>
@@ -188,6 +203,9 @@ export default function ComponentsClient({ initialComponents, canWrite }: { init
                     <span className="flex items-center gap-1 text-xs text-slate-400">
                       <MapPin className="w-3 h-3" />
                       {c.boxName}
+                      {boxLocations[c.boxId] && (
+                        <span className="text-slate-500">· {boxLocations[c.boxId]}</span>
+                      )}
                     </span>
                   )}
                 </div>

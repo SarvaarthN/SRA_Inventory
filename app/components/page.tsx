@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { redis, keys } from "@/lib/redis";
-import { Component } from "@/lib/types";
+import { Box, Component } from "@/lib/types";
 import { getSession } from "@/lib/session";
 import ComponentsClient from "./ComponentsClient";
 
@@ -15,8 +15,34 @@ async function getComponents() {
   );
 }
 
+// A component stores its box id and name but not the box's location, which
+// only lives on the box record. Look them up once here so the list can show
+// where a part physically is without a trip to the Boxes page.
+async function getBoxLocations(): Promise<Record<string, string>> {
+  const ids = await redis.smembers(keys.boxesAll());
+  if (!ids.length) return {};
+  const pipeline = redis.pipeline();
+  ids.forEach((id) => pipeline.hgetall(keys.box(id)));
+  const results = await pipeline.exec();
+  const locations: Record<string, string> = {};
+  (results.map((r) => r as Box | null).filter(Boolean) as Box[]).forEach((b) => {
+    if (b.location) locations[b.id] = b.location;
+  });
+  return locations;
+}
+
 export default async function ComponentsPage() {
-  const [components, session] = await Promise.all([getComponents(), getSession()]);
+  const [components, boxLocations, session] = await Promise.all([
+    getComponents(),
+    getBoxLocations(),
+    getSession(),
+  ]);
   const canWrite = session?.year === "TY" || session?.year === "LY";
-  return <ComponentsClient initialComponents={components} canWrite={canWrite} />;
+  return (
+    <ComponentsClient
+      initialComponents={components}
+      boxLocations={boxLocations}
+      canWrite={canWrite}
+    />
+  );
 }
