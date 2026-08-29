@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 import { redis, keys } from "@/lib/redis";
-import { Component, Transaction } from "@/lib/types";
+import { Box, Component, Transaction } from "@/lib/types";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/session";
 import ComponentDetail from "./ComponentDetail";
@@ -17,7 +17,11 @@ async function getData(id: string) {
   const results = await pipeline.exec();
   const transactions = results.map((r) => r as unknown as Transaction | null).filter(Boolean) as Transaction[];
 
-  return { component, transactions };
+  const boxLocation = component.boxId
+    ? ((await redis.hgetall<Box>(keys.box(component.boxId)))?.location ?? "")
+    : "";
+
+  return { component, transactions, boxLocation };
 }
 
 export default async function ComponentDetailPage({ params }: Props) {
@@ -27,5 +31,12 @@ export default async function ComponentDetailPage({ params }: Props) {
   if (!data) notFound();
   const session = await getSession();
   const canWrite = session?.year === "TY" || session?.year === "LY";
-  return <ComponentDetail component={data.component} transactions={data.transactions} canWrite={canWrite} />;
+  return (
+    <ComponentDetail
+      component={data.component}
+      transactions={data.transactions}
+      boxLocation={data.boxLocation}
+      canWrite={canWrite}
+    />
+  );
 }

@@ -15,9 +15,6 @@ async function getComponents() {
   );
 }
 
-// A component stores its box id and name but not the box's location, which
-// only lives on the box record. Look them up once here so the list can show
-// where a part physically is without a trip to the Boxes page.
 async function getBoxLocations(): Promise<Record<string, string>> {
   const ids = await redis.smembers(keys.boxesAll());
   if (!ids.length) return {};
