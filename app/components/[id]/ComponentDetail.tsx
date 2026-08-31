@@ -34,14 +34,17 @@ const txTypeLabel: Record<string, string> = {
 export default function ComponentDetail({
   component: initial,
   transactions: initialTx,
+  boxLocation: initialBoxLocation,
   canWrite,
 }: {
   component: Component;
   transactions: Transaction[];
+  boxLocation: string;
   canWrite: boolean;
 }) {
   const router = useRouter();
   const [component, setComponent] = useState(initial);
+  const [boxLocation, setBoxLocation] = useState(initialBoxLocation);
   const [transactions] = useState(initialTx);
   const [loading, setLoading] = useState(false);
 
@@ -93,6 +96,7 @@ export default function ComponentDetail({
       if (!res.ok) throw new Error((await res.json()).error);
       const updated: Component = await res.json();
       setComponent(updated);
+      setBoxLocation(box?.location ?? "");
       toast.success(box ? `Moved to ${box.name}` : "Removed from box");
       setBoxDialog(false);
       setBoxSearch("");
@@ -209,6 +213,9 @@ export default function ComponentDetail({
                 <>
                   <div className="font-medium text-slate-700 truncate">{component.boxName}</div>
                   <div className="text-xs text-slate-400 font-mono">{component.boxId}</div>
+                  {boxLocation && (
+                    <div className="text-xs text-slate-500 mt-0.5 truncate">{boxLocation}</div>
+                  )}
                 </>
               ) : (
                 <div className="font-medium text-amber-600">Not in a box</div>
