@@ -10,6 +10,7 @@ A shared record of everything the Student Robotics Association owns: what is in 
 - [The sections](#the-sections)
 - [Part numbers](#part-numbers)
 - [Quick Add](#quick-add)
+- [Invoice Upload](#invoice-upload)
 - [Worth remembering](#worth-remembering)
 - [Getting help](#getting-help)
 - [Contributing](#contributing)
@@ -124,6 +125,12 @@ TY and LY members see a Quick Add button in the bottom right corner. It takes a 
 It checks what already exists first, so describing something the club already has adds to that stock rather than creating a duplicate entry. It will also create a box if you mention one that does not exist yet.
 
 It tells you exactly what it did, and everything it does appears in History under your name, the same as if you had typed it in by hand. If it misreads you, correct it the normal way through the Components page.
+
+## Invoice Upload
+
+TY and LY members see an Upload Invoice button on the Components page. Upload a photo, scan or PDF of a vendor invoice and it reads off the item lines automatically, showing them in an editable list before anything is saved so you can fix a misread name or quantity first.
+
+Confirming creates a single new box named after the vendor and the date, for example `Robu.in_2026-09-19`, with every item on the invoice added to it as a new component. Keeping a delivery in its own box, rather than mixed into general storage, is exactly what [INVENTORY_GUIDE.md](INVENTORY_GUIDE.md)'s delivery procedure asks for.
 
 ## Worth remembering
 

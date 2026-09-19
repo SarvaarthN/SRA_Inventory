@@ -36,7 +36,7 @@ Note that `AGENTS.md` warns this version of Next.js has breaking changes relativ
 
 - Node.js 20 or later
 - An Upstash Redis database, free tier is enough
-- A Google Gemini API key, only if you are working on Quick Add
+- A Google Gemini API key, only if you are working on Quick Add or Invoice Upload
 
 ### Steps
 
@@ -60,7 +60,7 @@ GEMINI_API_KEY=your-gemini-key
 | `UPSTASH_REDIS_REST_URL` | Upstash console, your database, REST API section |
 | `UPSTASH_REDIS_REST_TOKEN` | Same place |
 | `SESSION_SECRET` | Generate with `openssl rand -base64 32`. Changing it signs every user out |
-| `GEMINI_API_KEY` | Free from [aistudio.google.com](https://aistudio.google.com). Leave blank if you do not need Quick Add, the rest of the app is unaffected |
+| `GEMINI_API_KEY` | Free from [aistudio.google.com](https://aistudio.google.com). Leave blank if you do not need Quick Add or Invoice Upload, the rest of the app is unaffected |
 
 `.env.local` is gitignored. Never commit real credentials.
 

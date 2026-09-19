@@ -118,7 +118,7 @@ Rules:
   let actions: GeminiAction[];
   try {
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash", systemInstruction });
+    const model = genAI.getGenerativeModel({ model: "gemini-flash-lite-latest", systemInstruction });
     const result = await model.generateContent(message);
     const text = result.response.text().trim().replace(/^```(?:json)?\n?/i, "").replace(/\n?```$/i, "").trim();
     actions = JSON.parse(text);

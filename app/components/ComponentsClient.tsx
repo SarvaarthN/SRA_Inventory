@@ -6,6 +6,7 @@ import { Plus, Search, Package2, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { ALL_CATEGORIES as ALL, filterComponents, matchesCategory } from "@/lib/search";
+import InvoiceUpload from "@/components/InvoiceUpload";
 
 export default function ComponentsClient({
   initialComponents,
@@ -40,14 +41,17 @@ export default function ComponentsClient({
           <p className="text-slate-500 text-sm mt-0.5">{initialComponents.length} total items</p>
         </div>
         {canWrite && (
-          <Link
-            href="/components/new"
-            className="flex items-center gap-1.5 bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Add Component</span>
-            <span className="sm:hidden">Add</span>
-          </Link>
+          <div className="flex items-center gap-2">
+            <InvoiceUpload />
+            <Link
+              href="/components/new"
+              className="flex items-center gap-1.5 bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Component</span>
+              <span className="sm:hidden">Add</span>
+            </Link>
+          </div>
         )}
       </div>
 
