@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# A newer push to the same branch cancels the older run.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: ${{ matrix.task.name }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # report every failure in one run, not just the first
+      matrix:
+        task:
+          - { name: Typecheck, run: npm run typecheck }
+          - { name: Lint, run: npm run lint }
+          - { name: Tests, run: npm run test:ci }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: ${{ matrix.task.run }}
+        env:
+          # Dummy values. Tests must never reach a real service; the build only
+          # needs these to exist because modules read them at import time.
+          SESSION_SECRET: ci-session-secret-not-a-real-secret-000000
+          UPSTASH_REDIS_REST_URL: https://example.invalid
+          UPSTASH_REDIS_REST_TOKEN: ci-token
+          GEMINI_API_KEY: ci-gemini-key
+
+      - name: Upload coverage
+        if: matrix.task.name == 'Tests'
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 7
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+        env:
+          SESSION_SECRET: ci-session-secret-not-a-real-secret-000000
+          UPSTASH_REDIS_REST_URL: https://example.invalid
+          UPSTASH_REDIS_REST_TOKEN: ci-token
+          GEMINI_API_KEY: ci-gemini-key
+
+  tests-required:
+    name: New code ships with tests
+    runs-on: ubuntu-latest
+    # Bypass by adding the `no-tests-needed` label, with a reason in the PR body.
+    if: >-
+      github.event_name == 'pull_request' &&
+      !contains(github.event.pull_request.labels.*.name, 'no-tests-needed')
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need the base branch to diff against
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/check-tests-required.mjs
+        env:
+          BASE_REF: origin/${{ github.base_ref }}

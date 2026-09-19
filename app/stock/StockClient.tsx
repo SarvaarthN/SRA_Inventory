@@ -5,7 +5,8 @@ import { toast } from "sonner";
 import { Search, MapPin, ArrowDownCircle, ArrowUpCircle, X, Package2, CheckCircle2, Lock } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { cn, lc } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { filterComponents } from "@/lib/search";
 
 type ActionState = {
   componentId: string;
@@ -56,15 +57,7 @@ export default function StockClient({
     const q = debounced.trim().toLowerCase();
     if (!q) { setResults([]); return; }
     setSearching(true);
-    const filtered = allComponents.filter(
-      (c) =>
-        lc(c.name).includes(q) ||
-        lc(c.id).includes(q) ||
-        lc(c.description).includes(q) ||
-        lc(c.boxName).includes(q) ||
-        lc(getCategoryLabel(c)).includes(q)
-    );
-    setResults(filtered);
+    setResults(filterComponents(allComponents, q));
     setSearching(false);
   }, [debounced, allComponents]);
 

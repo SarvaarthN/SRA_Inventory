@@ -290,8 +290,8 @@ export default function OrderItemRow({
       </div>
       {isNew && !item.boxId && (
         <p className="text-xs text-slate-400">
-          Optional. Leave it blank if you'll decide once it arrives, then assign
-          the box from the component page.
+          Optional. Leave it blank if you&apos;ll decide once it arrives, then
+          assign the box from the component page.
         </p>
       )}
     </div>

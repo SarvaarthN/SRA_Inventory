@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 import { NextRequest, NextResponse } from "next/server";
 import { redis, keys } from "@/lib/redis";
 import { Component, Box } from "@/lib/types";
-import { lc } from "@/lib/utils";
+import { filterBoxes, filterComponents } from "@/lib/search";
 
 export async function GET(req: NextRequest) {
   try {
@@ -18,10 +18,8 @@ export async function GET(req: NextRequest) {
       const pipeline = redis.pipeline();
       ids.forEach((id) => pipeline.hgetall(keys.box(id)));
       const results = await pipeline.exec();
-      const boxes = (results.map((r) => r as Box | null).filter(Boolean) as Box[])
-        .filter((b) => lc(b.name).includes(q) || lc(b.location).includes(q) || lc(b.id).includes(q))
-        .slice(0, 8);
-      return NextResponse.json(boxes);
+      const all = results.map((r) => r as Box | null).filter(Boolean) as Box[];
+      return NextResponse.json(filterBoxes(all, q).slice(0, 8));
     }
 
     const ids = await redis.smembers(keys.componentsAll());
@@ -29,10 +27,8 @@ export async function GET(req: NextRequest) {
     const pipeline = redis.pipeline();
     ids.forEach((id) => pipeline.hgetall(keys.component(id)));
     const results = await pipeline.exec();
-    const components = (results.map((r) => r as Component | null).filter(Boolean) as Component[])
-      .filter((c) => lc(c.name).includes(q) || lc(c.id).includes(q) || lc(c.category).includes(q))
-      .slice(0, 8);
-    return NextResponse.json(components);
+    const all = results.map((r) => r as Component | null).filter(Boolean) as Component[];
+    return NextResponse.json(filterComponents(all, q).slice(0, 8));
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "Search failed" }, { status: 500 });

@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { redis, keys } from "@/lib/redis";
 import { Box, Component, Transaction, DEFAULT_CATEGORIES, CategoryDef } from "@/lib/types";
 import { getSession } from "@/lib/session";
+import { canWrite } from "@/lib/auth";
 import { lc } from "@/lib/utils";
 
 type CreateBoxAction = {
@@ -37,7 +38,7 @@ export type ResultItem = {
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  if (session.year !== "TY" && session.year !== "LY") {
+  if (!canWrite(session)) {
     return NextResponse.json({ error: "Only TY/LY members can add inventory" }, { status: 403 });
   }
 

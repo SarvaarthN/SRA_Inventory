@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Search, Package2, Plus, ArrowLeft, Tag, X } from "lucide-react";
 import Link from "next/link";
-import { cn, lc } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { filterBoxes } from "@/lib/search";
 import {
   Dialog,
   DialogContent,
@@ -82,10 +83,7 @@ export default function NewComponentClient() {
   }, [debouncedSearch]);
 
   const boxSuggestions = !selectedBox && boxSearch.trim()
-    ? allBoxes.filter((b) => {
-        const q = boxSearch.toLowerCase();
-        return lc(b.name).includes(q) || lc(b.id).includes(q) || lc(b.location).includes(q);
-      }).slice(0, 8)
+    ? filterBoxes(allBoxes, boxSearch).slice(0, 8)
     : [];
 
   const handleSelectComponent = (c: Component) => {

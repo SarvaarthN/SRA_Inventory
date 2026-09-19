@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { redis, keys } from "@/lib/redis";
 import { Box, Component } from "@/lib/types";
 import { getSession } from "@/lib/session";
+import { canWrite as sessionCanWrite } from "@/lib/auth";
 import ComponentsClient from "./ComponentsClient";
 
 async function getComponents() {
@@ -37,7 +38,7 @@ export default async function ComponentsPage() {
     getBoxLocations(),
     getSession(),
   ]);
-  const canWrite = session?.year === "TY" || session?.year === "LY";
+  const canWrite = sessionCanWrite(session);
   return (
     <ComponentsClient
       initialComponents={components}

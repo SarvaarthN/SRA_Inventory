@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { redis, keys } from "@/lib/redis";
 import { Component, Transaction, getCategoryLabel, getCategoryColor } from "@/lib/types";
 import { getSession } from "@/lib/session";
+import { canWrite as sessionCanWrite } from "@/lib/auth";
 import Link from "next/link";
 import { Package2, Box, AlertTriangle, TrendingUp, ArrowRight, Plus, ArrowLeftRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
@@ -40,7 +41,7 @@ export default async function DashboardPage() {
     getDashboardData(),
     getSession(),
   ]);
-  const canWrite = session?.year === "TY" || session?.year === "LY";
+  const canWrite = sessionCanWrite(session);
 
   const totalQty = components.reduce((s, c) => s + Number(c.quantity), 0);
   const lowStock = components.filter((c) => Number(c.quantity) > 0 && Number(c.quantity) <= 2);

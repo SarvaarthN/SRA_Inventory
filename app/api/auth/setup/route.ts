@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs";
 import { redis, keys } from "@/lib/redis";
 import { User } from "@/lib/types";
 import { createSession, SessionPayload } from "@/lib/session";
+import { hasAnyAdmin } from "@/lib/auth";
 
 async function hasAdmin(): Promise<boolean> {
   const userIds = await redis.smembers(keys.usersAll());
@@ -11,7 +12,7 @@ async function hasAdmin(): Promise<boolean> {
   const pipeline = redis.pipeline();
   userIds.forEach((id) => pipeline.hgetall(keys.user(id)));
   const results = await pipeline.exec();
-  return (results.map((r) => r as User | null).filter(Boolean) as User[]).some((u) => String(u.isAdmin) === "true");
+  return hasAnyAdmin(results.map((r) => r as User | null));
 }
 
 export async function GET() {

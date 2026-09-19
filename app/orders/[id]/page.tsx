@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 import { redis, keys } from "@/lib/redis";
 import { Order, parseOrderItems, isOverdue, ORDER_STATUS_STYLES } from "@/lib/types";
 import { getSession } from "@/lib/session";
+import { canWrite as sessionCanWrite } from "@/lib/auth";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
@@ -31,7 +32,7 @@ export default async function OrderDetailPage({ params }: Params) {
   if (!raw) notFound();
 
   const order: Order = { ...raw, items: parseOrderItems(raw.items) };
-  const canWrite = session?.year === "TY" || session?.year === "LY";
+  const canWrite = sessionCanWrite(session);
   const late = isOverdue(order);
   const units = order.items.reduce((s, i) => s + Number(i.quantity), 0);
 

@@ -4,9 +4,8 @@ import { Component, getCategoryLabel, getCategoryColor } from "@/lib/types";
 import Link from "next/link";
 import { Plus, Search, Package2, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { cn, lc } from "@/lib/utils";
-
-const ALL = "ALL";
+import { cn } from "@/lib/utils";
+import { ALL_CATEGORIES as ALL, filterComponents, matchesCategory } from "@/lib/search";
 
 export default function ComponentsClient({
   initialComponents,
@@ -27,18 +26,11 @@ export default function ComponentsClient({
     }
   });
 
-  const filtered = initialComponents.filter((c) => {
-    const matchesCat = selectedCat === ALL || c.category === selectedCat;
-    const q = search.toLowerCase();
-    const matchesSearch =
-      !q ||
-      lc(c.name).includes(q) ||
-      lc(c.id).includes(q) ||
-      lc(c.description).includes(q) ||
-      lc(c.boxName).includes(q) ||
-      lc(boxLocations[c.boxId]).includes(q);
-    return matchesCat && matchesSearch;
-  });
+  const filtered = filterComponents(
+    initialComponents.filter((c) => matchesCategory(c, selectedCat)),
+    search,
+    boxLocations
+  );
 
   return (
     <div className="space-y-4">

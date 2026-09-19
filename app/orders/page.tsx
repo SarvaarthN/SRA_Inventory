@@ -4,6 +4,7 @@ import { Order, parseOrderItems, isOverdue } from "@/lib/types";
 import Link from "next/link";
 import { Truck, Plus, PackageCheck, AlertTriangle, Calendar, Store } from "lucide-react";
 import { getSession } from "@/lib/session";
+import { canWrite as sessionCanWrite } from "@/lib/auth";
 
 async function getOrders(): Promise<Order[]> {
   const ids = await redis.zrange<string[]>(keys.ordersAll(), 0, -1);
@@ -115,7 +116,7 @@ function OrderCard({ order }: { order: Order }) {
 
 export default async function OrdersPage() {
   const [orders, session] = await Promise.all([getOrders(), getSession()]);
-  const canWrite = session?.year === "TY" || session?.year === "LY";
+  const canWrite = sessionCanWrite(session);
 
   const incoming = orders.filter((o) => o.status === "ORDERED");
   const received = orders.filter((o) => o.status === "RECEIVED");

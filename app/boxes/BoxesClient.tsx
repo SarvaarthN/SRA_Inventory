@@ -4,22 +4,14 @@ import { Box } from "@/lib/types";
 import Link from "next/link";
 import { Box as BoxIcon, MapPin, Plus, Package2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { lc } from "@/lib/utils";
+import { filterBoxes } from "@/lib/search";
 
 type BoxWithStats = Box & { componentCount: number; totalQty: number };
 
 export default function BoxesClient({ boxes }: { boxes: BoxWithStats[] }) {
   const [search, setSearch] = useState("");
 
-  const filtered = boxes.filter((b) => {
-    const q = search.toLowerCase();
-    return (
-      !q ||
-      lc(b.name).includes(q) ||
-      lc(b.id).includes(q) ||
-      lc(b.location).includes(q)
-    );
-  });
+  const filtered = filterBoxes(boxes, search) as typeof boxes;
 
   return (
     <div className="space-y-5">

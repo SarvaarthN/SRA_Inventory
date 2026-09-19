@@ -3,6 +3,7 @@ import { redis, keys } from "@/lib/redis";
 import { Box, Component, Transaction } from "@/lib/types";
 import { notFound } from "next/navigation";
 import { getSession } from "@/lib/session";
+import { canWrite as sessionCanWrite } from "@/lib/auth";
 import ComponentDetail from "./ComponentDetail";
 
 type Props = { params: Promise<{ id: string }> };
@@ -31,7 +32,7 @@ export default async function ComponentDetailPage({ params }: Props) {
   const data = await getData(decodedId);
   if (!data) notFound();
   const session = await getSession();
-  const canWrite = session?.year === "TY" || session?.year === "LY";
+  const canWrite = sessionCanWrite(session);
   return (
     <ComponentDetail
       component={data.component}
