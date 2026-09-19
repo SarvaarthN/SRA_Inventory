@@ -4,6 +4,7 @@ import { Box } from "@/lib/types";
 import Link from "next/link";
 import { Box as BoxIcon, MapPin, Plus, Package2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { lc } from "@/lib/utils";
 
 type BoxWithStats = Box & { componentCount: number; totalQty: number };
 
@@ -14,9 +15,9 @@ export default function BoxesClient({ boxes }: { boxes: BoxWithStats[] }) {
     const q = search.toLowerCase();
     return (
       !q ||
-      b.name.toLowerCase().includes(q) ||
-      b.id.toLowerCase().includes(q) ||
-      String(b.location ?? "").toLowerCase().includes(q)
+      lc(b.name).includes(q) ||
+      lc(b.id).includes(q) ||
+      lc(b.location).includes(q)
     );
   });
 

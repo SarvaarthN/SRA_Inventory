@@ -23,7 +23,10 @@ async function getBoxLocations(): Promise<Record<string, string>> {
   const results = await pipeline.exec();
   const locations: Record<string, string> = {};
   (results.map((r) => r as Box | null).filter(Boolean) as Box[]).forEach((b) => {
-    if (b.location) locations[b.id] = b.location;
+    // Upstash JSON-parses hash values, so a location like "101" comes back as a
+    // number. Coerce here so this really is a Record<string, string>.
+    const location = b.location == null ? "" : String(b.location);
+    if (location) locations[String(b.id)] = location;
   });
   return locations;
 }

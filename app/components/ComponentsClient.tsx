@@ -4,7 +4,7 @@ import { Component, getCategoryLabel, getCategoryColor } from "@/lib/types";
 import Link from "next/link";
 import { Plus, Search, Package2, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+import { cn, lc } from "@/lib/utils";
 
 const ALL = "ALL";
 
@@ -32,11 +32,11 @@ export default function ComponentsClient({
     const q = search.toLowerCase();
     const matchesSearch =
       !q ||
-      c.name.toLowerCase().includes(q) ||
-      c.id.toLowerCase().includes(q) ||
-      (c.description ?? "").toLowerCase().includes(q) ||
-      (c.boxName ?? "").toLowerCase().includes(q) ||
-      (boxLocations[c.boxId] ?? "").toLowerCase().includes(q);
+      lc(c.name).includes(q) ||
+      lc(c.id).includes(q) ||
+      lc(c.description).includes(q) ||
+      lc(c.boxName).includes(q) ||
+      lc(boxLocations[c.boxId]).includes(q);
     return matchesCat && matchesSearch;
   });
 

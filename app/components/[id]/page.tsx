@@ -17,9 +17,10 @@ async function getData(id: string) {
   const results = await pipeline.exec();
   const transactions = results.map((r) => r as unknown as Transaction | null).filter(Boolean) as Transaction[];
 
-  const boxLocation = component.boxId
-    ? ((await redis.hgetall<Box>(keys.box(component.boxId)))?.location ?? "")
-    : "";
+  const rawLocation = component.boxId
+    ? (await redis.hgetall<Box>(keys.box(component.boxId)))?.location
+    : null;
+  const boxLocation = rawLocation == null ? "" : String(rawLocation);
 
   return { component, transactions, boxLocation };
 }
