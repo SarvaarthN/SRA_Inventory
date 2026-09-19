@@ -162,6 +162,24 @@ export function isOverdue(order: Pick<Order, "status" | "expectedAt">): boolean 
   return new Date(order.expectedAt).getTime() < Date.now();
 }
 
+// One line item extracted from an uploaded invoice, before it becomes a Component.
+export interface InvoiceItem {
+  name: string;
+  category: string;
+  quantity: number;
+  description: string;
+}
+
+// Result of one step of the invoice upload flow (parse or commit), shaped like
+// the chat route's ResultItem so the UI can reuse the same rendering.
+export type InvoiceResultType = "box" | "component_new" | "error";
+export interface InvoiceResultItem {
+  type: InvoiceResultType;
+  message: string;
+  sub?: string;
+  id?: string;
+}
+
 // Helper: resolve category label/color from the component itself (with fallbacks)
 export function getCategoryLabel(c: Component): string {
   return c.categoryLabel || CATEGORY_LABELS[c.category] || c.category;
