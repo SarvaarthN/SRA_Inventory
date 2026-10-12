@@ -105,8 +105,11 @@ describe("ComponentsClient search does not crash the page", () => {
     expect(screen.queryByText("SG90 Servo")).not.toBeInTheDocument();
   });
 
+  // 36 clear+type rounds. userEvent's default inter-key delay makes that slow
+  // enough to trip the 5s limit on a loaded machine, so drop the delay rather
+  // than narrow the coverage: every character is still exercised.
   it("survives every letter and digit typed one at a time", async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     render(
       <ComponentsClient
         initialComponents={components}
@@ -120,7 +123,7 @@ describe("ComponentsClient search does not crash the page", () => {
       await user.type(box, ch);
       expect(screen.getByRole("heading", { name: "Components" })).toBeInTheDocument();
     }
-  });
+  }, 15000);
 
   it("renders with no box locations at all", async () => {
     const user = userEvent.setup();

@@ -208,17 +208,47 @@ describe("POST /api/invoices/parse — Gemini response handling", () => {
   });
 });
 
+/**
+ * Run a request whose route sleeps between retries, without waiting out the
+ * real backoff.
+ *
+ * A single `runAllTimersAsync()` is not enough and is not deterministic: the
+ * route only reaches its `setTimeout` after awaiting formData, arrayBuffer and
+ * the Gemini call, so the drain can happen before any timer exists. It then
+ * returns immediately, fake time never advances again, and the request hangs
+ * until the test times out. Whether that happens comes down to how many
+ * microtask ticks each path takes, which is why some of these raced green
+ * locally and would have gone red in CI.
+ *
+ * Draining in a bounded loop instead keeps advancing until the request settles,
+ * so it does not matter when each timer gets scheduled.
+ */
+async function withRetriesSettled<T>(start: () => Promise<T>): Promise<T> {
+  vi.useFakeTimers();
+  try {
+    let settled = false;
+    const inFlight = start().finally(() => {
+      settled = true;
+    });
+    // Backoff is 1s then 2s; 20 rounds of 5s is ample headroom and bounds the
+    // loop so a genuinely stuck request still fails fast rather than spinning.
+    for (let i = 0; i < 20 && !settled; i++) {
+      await vi.advanceTimersByTimeAsync(5000);
+    }
+    return await inFlight;
+  } finally {
+    vi.useRealTimers();
+  }
+}
+
 describe("POST /api/invoices/parse — retries transient Gemini failures", () => {
   it("retries a 429 and succeeds once the rate limit clears", async () => {
     geminiErrorStatus = 429;
     geminiFailuresRemaining = 1; // fails once, then succeeds
     geminiReply = '[{"name":"HC-SR04","category":"SENS","quantity":1,"description":""}]';
 
-    vi.useFakeTimers();
-    const promise = postWithFile(makeFile());
-    await vi.runAllTimersAsync();
-    const body = await (await promise).json();
-    vi.useRealTimers();
+    const res = await withRetriesSettled(() => postWithFile(makeFile()));
+    const body = await res.json();
 
     expect(body.items).toHaveLength(1);
     expect(body.items[0].name).toBe("HC-SR04");
@@ -229,11 +259,8 @@ describe("POST /api/invoices/parse — retries transient Gemini failures", () =>
     geminiFailuresRemaining = 2; // fails twice — exactly at MAX_ATTEMPTS - 1
     geminiReply = '[{"name":"Servo","category":"MOTR","quantity":1,"description":""}]';
 
-    vi.useFakeTimers();
-    const promise = postWithFile(makeFile());
-    await vi.runAllTimersAsync();
-    const body = await (await promise).json();
-    vi.useRealTimers();
+    const res = await withRetriesSettled(() => postWithFile(makeFile()));
+    const body = await res.json();
 
     expect(body.items).toHaveLength(1);
   });
@@ -242,11 +269,8 @@ describe("POST /api/invoices/parse — retries transient Gemini failures", () =>
     geminiErrorStatus = 503;
     geminiFailuresRemaining = 99; // never recovers
 
-    vi.useFakeTimers();
-    const promise = postWithFile(makeFile());
-    await vi.runAllTimersAsync();
-    const body = await (await promise).json();
-    vi.useRealTimers();
+    const res = await withRetriesSettled(() => postWithFile(makeFile()));
+    const body = await res.json();
 
     expect(body.items).toEqual([]);
     expect(body.error).toMatch(/busy/i);
