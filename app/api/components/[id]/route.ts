@@ -47,7 +47,30 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       if (newQty < 0) {
         return NextResponse.json({ error: "Insufficient stock" }, { status: 400 });
       }
-      pipeline.hset(keys.component(decodedId), { quantity: newQty, updatedAt: now });
+
+      // Stocking something in may also relocate it: the "Add to Existing" form
+      // offers a box picker, and choosing a different box there means "the new
+      // stock is going here". Previously only UPDATE_BOX ever wrote the box, so
+      // that choice was silently discarded and the component stayed put.
+      //
+      // An absent or empty boxId means "I did not pick one", never "unassign" —
+      // clearing a box is UPDATE_BOX's job. Stocking OUT never relocates.
+      const requestedBoxId = typeof boxId === "string" ? boxId.trim() : "";
+      const movingBox =
+        action === "STOCK_IN" &&
+        requestedBoxId !== "" &&
+        requestedBoxId !== String(component.boxId ?? "");
+
+      pipeline.hset(keys.component(decodedId), {
+        quantity: newQty,
+        updatedAt: now,
+        ...(movingBox ? { boxId: requestedBoxId, boxName: boxName ?? "" } : {}),
+      });
+
+      // Keep the move in the audit trail, without inventing a transaction type
+      // that every History view would have to learn to render.
+      const movedNote = movingBox ? `Moved to ${boxName?.trim() || requestedBoxId}` : "";
+      const combinedNotes = [notes?.trim(), movedNote].filter(Boolean).join(" · ");
 
       const txId = `TX-${await redis.incr(keys.txCounter())}`;
       const tx: Transaction = {
@@ -58,7 +81,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
         quantityChange: quantity,
         quantityAfter: newQty,
         performedBy,
-        notes: notes ?? "",
+        notes: combinedNotes,
         timestamp: now,
       };
       pipeline.hset(keys.transaction(txId), tx);

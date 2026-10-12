@@ -144,10 +144,20 @@ export default function NewComponentClient() {
           quantity: Number(qty),
           performedBy: performedBy.trim(),
           notes: notes.trim() || undefined,
+          // The form offers a box picker, so send what was picked. Without
+          // these the choice was silently dropped and the component stayed in
+          // whichever box it was already in.
+          boxId: selectedBox?.id ?? "",
+          boxName: selectedBox?.name ?? "",
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
-      toast.success(`Added ${qty} units to ${selectedComponent.name}`);
+      const moved = selectedBox?.id && selectedBox.id !== selectedComponent.boxId;
+      toast.success(
+        moved
+          ? `Added ${qty} units and moved to ${selectedBox?.name}`
+          : `Added ${qty} units to ${selectedComponent.name}`
+      );
       router.push(`/components/${encodeURIComponent(selectedComponent.id)}`);
     } catch (e: unknown) {
       toast.error(e instanceof Error ? e.message : "Failed");
